@@ -1,5 +1,4 @@
-import React, { useState } from 'react'
-import { BookOpen, Users, Clock, DollarSign, Search, Filter, Grid, List } from 'lucide-react'
+import { BookOpen, Users, DollarSign } from 'lucide-react'
 
 const mockCourses = [
   {

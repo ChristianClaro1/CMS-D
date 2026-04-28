@@ -1,4 +1,4 @@
-import React from 'react'
+ 
 import { BookOpen, Users, DollarSign, TrendingUp } from 'lucide-react'
 
 const stats = [

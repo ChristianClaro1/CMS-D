@@ -1,10 +1,12 @@
 export interface User {
-  user_id: string;
-  role: string;
-  permissions: string[];
-  name?: string;
-  email?: string;
+  user_id: string
+  role: string
+  permissions: string[]
+  name?: string
+  email?: string
 }
+
+export type Optional<T> = T | null | undefined
 
 export interface Course {
   course_id: string;

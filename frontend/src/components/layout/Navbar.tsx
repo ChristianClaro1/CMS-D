@@ -1,4 +1,4 @@
-import React from 'react'
+ 
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@heroui/react'
 import { Bell, Search, User, LogOut } from 'lucide-react'

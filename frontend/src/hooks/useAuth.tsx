@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@/types'
 
 const mockUser: User = {
@@ -9,21 +9,24 @@ const mockUser: User = {
   email: 'john.doe@university.edu',
 }
 
-export function useAuth() {
+type AuthContextType = {
+  user: User | null
+  isLoading: boolean
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  logout: () => void
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate authentication check
     const checkAuth = async () => {
       try {
-        // In a real app, this would validate JWT with backend
         const token = localStorage.getItem('auth_token')
-        
-        if (token) {
-          // Mock authenticated user
-          setUser(mockUser)
-        }
+        if (token) setUser(mockUser)
       } catch (error) {
         console.error('Auth check failed:', error)
         localStorage.removeItem('auth_token')
@@ -31,21 +34,19 @@ export function useAuth() {
         setIsLoading(false)
       }
     }
-
     checkAuth()
   }, [])
 
   const login = async (email: string, password: string) => {
+    void email
+    void password
     try {
-      // Mock login - in real app would call API
       const response = { success: true, token: 'mock-jwt-token', user: mockUser }
-      
       if (response.success) {
         localStorage.setItem('auth_token', response.token)
         setUser(response.user)
         return { success: true }
       }
-      
       return { success: false, error: 'Invalid credentials' }
     } catch (error) {
       return { success: false, error: 'Login failed' }
@@ -57,10 +58,13 @@ export function useAuth() {
     setUser(null)
   }
 
-  return {
-    user,
-    isLoading,
-    login,
-    logout,
-  }
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>{children}</AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider')
+  return ctx
 }

@@ -1,9 +1,10 @@
-import React from 'react'
+import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { Toaster } from 'react-hot-toast'
 import { HeroUIProvider } from '@heroui/react'
+import { AuthProvider } from '@/hooks/useAuth'
 import App from './App.tsx'
 import './index.css'
 
@@ -17,11 +18,12 @@ const queryClient = new QueryClient({
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  <StrictMode>
     <QueryClientProvider client={queryClient}>
       <HeroUIProvider>
-        <BrowserRouter>
-          <App />
+        <AuthProvider>
+          <BrowserRouter>
+            <App />
           <Toaster 
             position="top-right"
             toastOptions={{
@@ -46,8 +48,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               },
             }}
           />
-        </BrowserRouter>
+          </BrowserRouter>
+        </AuthProvider>
       </HeroUIProvider>
     </QueryClientProvider>
-  </React.StrictMode>,
+  </StrictMode>,
 )
