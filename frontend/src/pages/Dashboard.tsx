@@ -86,7 +86,7 @@ export function Dashboard() {
 
       {/* Recent Activity */}
       <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
+        <div className="px-4 py-6 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
             Recent Activity
           </h3>
@@ -136,7 +136,7 @@ export function Dashboard() {
                   </div>
                 </li>
                 <li>
-                  <div className="relative">
+                  <div className="relative pb-8">
                     <div className="relative flex space-x-3">
                       <div>
                         <span className="h-8 w-8 rounded-full bg-yellow-500 flex items-center justify-center ring-8 ring-white">
