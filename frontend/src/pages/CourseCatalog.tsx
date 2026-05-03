@@ -1,4 +1,6 @@
-import { BookOpen, Users, DollarSign } from 'lucide-react'
+import NavTab from '@/components/NavTab'
+import { Link } from 'react-router-dom'
+import { useRole } from '@/contexts/RoleContext'
 
 const mockCourses = [
   {
@@ -32,133 +34,75 @@ const mockCourses = [
 ]
 
 export function CourseCatalog() {
+  const { role } = useRole()
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Course Catalog</h1>
-        <p className="mt-2 text-sm text-gray-700">
-          Browse and search available courses for the current semester.
-        </p>
-      </div>
+      <header className="pb-6">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-extrabold italic text-[#0f2147] tracking-tight">ACADEMIC PROGRAMS</h1>
+          <p className="mt-2 text-sm text-[#0f2147]">ACADEMIC PROGRAM & CURRICULUM DEVELOPMENT PORTAL</p>
 
-      {/* Filters */}
-      <div className="bg-white shadow rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Semester
-            </label>
-            <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-              <option>2024-2025-1</option>
-              <option>2024-2025-2</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Course Type
-            </label>
-            <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-              <option>All</option>
-              <option>Lecture</option>
-              <option>Lab</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Classification
-            </label>
-            <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-              <option>All</option>
-              <option>Core</option>
-              <option>Elective</option>
-              <option>Major</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Search
-            </label>
-            <input
-              type="text"
-              placeholder="Search courses..."
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            />
-          </div>
+          <nav className="mt-6 flex gap-8 text-sm font-semibold">
+            {((role as string) !== 'Department Chair' && (role as string) !== 'Registrar') && <NavTab to="/courses/manage" label="NEW PROGRAM PROPOSAL" />}
+            {role === 'Registrar' ? (
+              <>
+                <NavTab to="/courses/oversight" label="PROPOSAL OVERSIGHT" />
+                <NavTab to="/courses" label="ACADEMIC CATALOG" />
+              </>
+            ) : (
+              <>
+                <NavTab to="/courses" label="ACADEMIC CATALOG" />
+                {((role as string) !== 'Department Chair' && (role as string) !== 'Registrar') && <NavTab to="/prerequisites" label="PREREQUISITE MANAGER" />}
+              </>
+            )}
+          </nav>
         </div>
-      </div>
+      </header>
 
-      {/* Course Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockCourses.map((course) => (
-          <div
-            key={course.course_id}
-            className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  course.course_type === 'Lab' 
-                    ? 'bg-purple-100 text-purple-800'
-                    : 'bg-blue-100 text-blue-800'
-                }`}>
-                  {course.course_type}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {course.units} units
-                </span>
-              </div>
-              
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {course.course_code}: {course.course_name}
-              </h3>
-              
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-2" />
-                  <span>{course.enrolled_count}/{course.section_capacity} enrolled</span>
-                </div>
-                <div className="flex items-center">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  <span>{course.instructor_name}</span>
-                </div>
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  <span>₱{course.price.toLocaleString()}</span>
-                </div>
-              </div>
-              
-              {course.prerequisites.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-xs font-medium text-gray-700 mb-1">Prerequisites:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {course.prerequisites.map((prereq) => (
-                      <span
-                        key={prereq}
-                        className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                      >
-                        {prereq}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              <div className="mt-4 flex justify-between items-center">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  course.status === 'Active'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {course.status}
-                </span>
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                  View Details
-                </button>
-              </div>
+      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow p-6">
+        {/* Filters area */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex-1">
+            <div className="relative max-w-lg">
+              <input
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 placeholder-gray-400"
+                placeholder="Search by code or title..."
+              />
             </div>
           </div>
-        ))}
+
+            <div className="flex items-center gap-3">
+              <button className="px-4 py-2 rounded-md bg-white border border-gray-200">Filter</button>
+              {((role as string) !== 'Registrar') && (
+                <Link to="/courses/manage" className="px-4 py-2 rounded-md bg-[#0f2147] text-white shadow-md">+ Add Course</Link>
+              )}
+            </div>
+        </div>
+
+        {/* Course list */}
+        <div className="space-y-4">
+          {mockCourses.map((course) => (
+            <div key={course.course_id} className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-50 rounded-md flex items-center justify-center text-sm font-bold text-gray-600">{course.course_code.slice(0,2)}</div>
+                  <div>
+                    <div className="font-semibold text-lg">{course.course_name}</div>
+                    <div className="text-sm text-gray-500 mt-1">{course.course_code} • {course.units} Units • {course.course_type} • {course.is_elective ? 'Elective' : 'Core'}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-green-600">{course.status}</div>
+                  <div className="p-2 rounded-full bg-gray-50">•••</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
+
+export default CourseCatalog

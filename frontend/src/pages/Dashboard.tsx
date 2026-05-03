@@ -1,166 +1,124 @@
  
-import { BookOpen, Users, DollarSign, TrendingUp } from 'lucide-react'
+import {
+  BookOpen,
+  Users,
+  TrendingUp,
+  List,
+  ShieldCheck,
+  ClipboardList,
+  Calendar,
+} from 'lucide-react'
+import DashboardCard from '../components/dashboard/DashboardCard'
+import { useRole } from '@/contexts/RoleContext'
+import { Link } from 'react-router-dom'
 
-const stats = [
-  {
-    name: 'Total Courses',
-    value: '156',
-    change: '+12%',
-    changeType: 'positive' as const,
-    icon: BookOpen,
-  },
-  {
-    name: 'Active Students',
-    value: '2,847',
-    change: '+23%',
-    changeType: 'positive' as const,
-    icon: Users,
-  },
-  {
-    name: 'Total Revenue',
-    value: '₱12.4M',
-    change: '+8%',
-    changeType: 'positive' as const,
-    icon: DollarSign,
-  },
-  {
-    name: 'Enrollment Rate',
-    value: '87%',
-    change: '+5%',
-    changeType: 'positive' as const,
-    icon: TrendingUp,
-  },
+const topStats = [
+  { name: 'Active Catalog', value: 2 },
+  { name: 'Faculty Hub', value: 3 },
+  { name: 'Under Review', value: 1 },
+]
+
+const modules = [
+  { title: 'Academic Programs', desc: 'Propose and manage the curriculum lifecycle, including active catalog and prerequisite chains.', icon: List, to: '/courses/manage' },
+  { title: 'Active Catalog', desc: 'Browse historical and active courses — the authoritative source of IAE course data.', icon: BookOpen, to: '/courses' },
+  { title: 'Faculty Hub', desc: 'Assign faculty to sections and monitor teaching workloads for conflict resolution.', icon: Users, to: '/instructors' },
+  { title: 'Enrollment Hub', desc: 'Manage section capacity limits and scheduling synchronized with SRM.', icon: Calendar, to: '/enrollment' },
+  { title: 'Security Logs', desc: 'Trace administrative changes and ensure system accountability for audit purposes.', icon: ShieldCheck, to: '/reports' },
+  { title: 'Prerequisite Manager', desc: 'Define and manage course prerequisite/co-requisite chains to ensure academic flow integrity.', icon: ClipboardList, to: '/prerequisites' },
 ]
 
 export function Dashboard() {
+  const { role } = useRole()
+
+  // Filter modules based on role
+  const visibleModules = (() => {
+    if (role === 'Curriculum Committee') {
+      return modules.filter((m) => ['Academic Programs', 'Active Catalog', 'Prerequisite Manager'].includes(m.title))
+    }
+
+    if (role === 'Department Chair') {
+      return modules
+        .filter((m) => ['Academic Programs', 'Faculty Hub', 'Enrollment Hub'].includes(m.title))
+        .map((m) => (m.title === 'Academic Programs' ? { ...m, to: '/courses' } : m))
+    }
+
+    if (role === 'Registrar') {
+      return modules.filter((m) => ['Academic Programs', 'Enrollment Hub'].includes(m.title))
+        .map((m) => (m.title === 'Academic Programs' ? { ...m, to: '/courses' } : m))
+    }
+
+    return modules
+  })()
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-sm text-gray-700">
-          Welcome to the Course Management System. Here's an overview of your academic ecosystem.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <header className="py-6">
+        <div className="max-w-7xl mx-auto">
+          <div>
+            <h2 className="text-4xl font-extrabold text-[#0f2147] tracking-tight italic">WELCOME BACK, JOHN</h2>
+            <p className="mt-2 text-sm text-[#0f2147] italic">SYSTEM-WIDE ADMINISTRATIVE ACCESS</p>
+          </div>
+        </div>
+      </header>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <div
-              key={stat.name}
-              className="bg-white overflow-hidden shadow rounded-lg"
-            >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Icon className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        {stat.name}
-                      </dt>
-                      <dd className="flex items-baseline">
-                        <div className="text-2xl font-semibold text-gray-900">
-                          {stat.value}
-                        </div>
-                        <div
-                          className={`ml-2 flex items-baseline text-sm font-semibold ${
-                            stat.changeType === 'positive'
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`}
-                        >
-                          {stat.change}
-                        </div>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
+      {/* Top stat boxes placed outside the hero container */}
+      <div className="max-w-7xl mx-auto -mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 px-6">
+        <Link to="/courses" className="relative bg-white rounded-xl shadow pl-0 block hover:shadow-md">
+          <div className="absolute left-0 inset-y-0 w-1 bg-yellow-400 rounded-l-md"></div>
+          <div className="px-6 py-3 flex items-center space-x-4 ml-3">
+            <div className="bg-gray-50 rounded-md p-3">
+              <BookOpen className="h-6 w-6 text-gray-400" />
             </div>
-          )
-        })}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-6 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Recent Activity
-          </h3>
-          <div className="mt-5">
-            <div className="flow-root">
-              <ul className="-mb-8">
-                <li>
-                  <div className="relative pb-8">
-                    <div className="relative flex space-x-3">
-                      <div>
-                        <span className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
-                          <BookOpen className="h-4 w-4 text-white" />
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            New course <span className="font-medium text-gray-900">CS301</span> was created
-                          </p>
-                        </div>
-                        <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                          2 hours ago
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <div className="relative pb-8">
-                    <div className="relative flex space-x-3">
-                      <div>
-                        <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
-                          <Users className="h-4 w-4 text-white" />
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            Instructor <span className="font-medium text-gray-900">Dr. Smith</span> was assigned to CS101
-                          </p>
-                        </div>
-                        <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                          4 hours ago
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <div className="relative pb-8">
-                    <div className="relative flex space-x-3">
-                      <div>
-                        <span className="h-8 w-8 rounded-full bg-yellow-500 flex items-center justify-center ring-8 ring-white">
-                          <DollarSign className="h-4 w-4 text-white" />
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            Pricing updated for <span className="font-medium text-gray-900">Lab Courses</span>
-                          </p>
-                        </div>
-                        <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                          6 hours ago
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
+            <div>
+              <div className="text-xl font-bold text-[#0f2147]">{topStats[0].value}</div>
+              <div className="text-xs text-gray-500 uppercase">{topStats[0].name}</div>
             </div>
           </div>
+        </Link>
+
+        <Link to="/instructors" className="relative bg-white rounded-xl shadow pl-0 block hover:shadow-md">
+          <div className="absolute left-0 inset-y-0 w-1 bg-yellow-400 rounded-l-md"></div>
+          <div className="px-6 py-3 flex items-center space-x-4 ml-3">
+            <div className="bg-gray-50 rounded-md p-3">
+              <Users className="h-6 w-6 text-gray-400" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-[#0f2147]">{topStats[1].value}</div>
+              <div className="text-xs text-gray-500 uppercase">{topStats[1].name}</div>
+            </div>
+          </div>
+        </Link>
+
+        <Link to="/courses/manage" className="relative bg-white rounded-xl shadow pl-0 block hover:shadow-md">
+          <div className="absolute left-0 inset-y-0 w-1 bg-yellow-400 rounded-l-md"></div>
+          <div className="px-6 py-3 flex items-center space-x-4 ml-3">
+            <div className="bg-gray-50 rounded-md p-3">
+              <TrendingUp className="h-6 w-6 text-gray-400" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-[#0f2147]">{topStats[2].value}</div>
+              <div className="text-xs text-gray-500 uppercase">{topStats[2].name}</div>
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        {visibleModules.map((m) => (
+          <div key={m.title} className="h-full">
+            <DashboardCard title={m.title} description={m.desc} icon={m.icon} to={m.to} />
+          </div>
+        ))}
+      </div>
+
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <h3 className="text-lg font-semibold text-[#0f2147]">System Operational</h3>
+          <p className="mt-2 text-sm text-gray-500">All course management modules are currently synchronized and active.</p>
         </div>
       </div>
     </div>
   )
 }
+
+export default Dashboard
