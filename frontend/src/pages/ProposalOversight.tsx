@@ -1,4 +1,5 @@
 import NavTab from '@/components/NavTab'
+import { useRole } from '@/contexts/RoleContext'
 
 const mockProposals: Array<{
   id: string
@@ -11,6 +12,8 @@ const mockProposals: Array<{
 }> = []
 
 export function ProposalOversight() {
+  const { role } = useRole()
+
   return (
     <div className="space-y-6">
       <header className="pb-6">
@@ -21,7 +24,7 @@ export function ProposalOversight() {
           <nav className="mt-6 flex gap-8 text-sm font-semibold">
             <NavTab to="/courses/oversight" label="PROPOSAL OVERSIGHT" />
             <NavTab to="/courses" label="ACADEMIC CATALOG" />
-            <NavTab to="/prerequisites" label="PREREQUISITE MANAGER" />
+            {role !== 'Registrar' && role !== 'Department Chair' && <NavTab to="/prerequisites" label="PREREQUISITE MANAGER" />}
           </nav>
         </div>
       </header>
