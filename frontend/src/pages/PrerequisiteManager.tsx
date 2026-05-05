@@ -5,8 +5,9 @@ import { useRole } from '@/contexts/RoleContext'
 import { useNavigate } from 'react-router-dom'
 
 const mockPrereqs = [
-  { id: 'PR-001', course: 'CS101', prerequisite: 'MATH101', type: 'Hard' },
-  { id: 'PR-002', course: 'CS201', prerequisite: 'CS101', type: 'Soft' },
+  { id: 'PR-001', course: 'GFDD: vvsd', prerequisite: 'MATH105', type: 'Hard' },
+  { id: 'PR-002', course: 'MATH105: Calculus I', prerequisite: 'CS101', type: 'Hard' },
+  { id: 'PR-003', course: 'CS101: Intro to Programming', prerequisite: 'No prerequisites defined', type: 'Soft' },
 ]
 
 export function PrerequisiteManager() {
@@ -44,36 +45,48 @@ export function PrerequisiteManager() {
           <p className="mt-2 text-sm text-[#0f2147]">ACADEMIC PROGRAM & CURRICULUM DEVELOPMENT PORTAL</p>
 
           <nav className="mt-6 flex gap-8 text-sm font-semibold">
-            {(role !== 'Department Chair') && <NavTab to="/courses/manage" label="NEW PROGRAM PROPOSAL" />}
+            <NavTab to="/courses/oversight" label="PROPOSAL OVERSIGHT" />
             <NavTab to="/courses" label="ACADEMIC CATALOG" />
-            {(role !== 'Department Chair') && <NavTab to="/prerequisites" label="PREREQUISITE MANAGER" />}
+            {role !== 'Department Chair' && <NavTab to="/prerequisites" label="PREREQUISITE MANAGER" />}
           </nav>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-[#fef9ec] rounded-2xl p-8">
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <div className="mb-6">
-              <div>
-                <h2 className="text-3xl font-extrabold text-[#0f2147]">Academic Dependency Manager</h2>
-                <p className="mt-2 text-sm text-[#6b7280] uppercase tracking-wider">Define and manage course prerequisites and co-requisites to ensure academic flow integrity.</p>
-              </div>
+      <div className="max-w-7xl mx-auto px-4 pb-4">
+        <div className="rounded-[2rem] bg-[#fef9ec] p-4 sm:p-6 lg:p-8">
+          <div className="rounded-[1.75rem] border border-[#dce6f4] bg-white px-6 py-8 shadow-[0_12px_28px_rgba(15,33,71,0.06)] sm:px-10 sm:py-10 lg:px-12 lg:py-12">
+            <div className="mb-8">
+              <h2 className="text-[1.8rem] font-extrabold text-[#192544] sm:text-[2.1rem]">Academic Dependency Manager</h2>
+              <p className="mt-2 max-w-4xl text-[0.78rem] font-medium uppercase tracking-[0.12em] text-[#66789c] sm:text-[0.82rem]">
+                Define and manage course prerequisites and co-requisites to ensure academic flow integrity.
+              </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {mockPrereqs.map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-5 bg-[#f7fbfe] rounded-xl border border-[#e6eef6]">
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#0f2147]">{p.course}: <span className="font-medium text-gray-700">{p.prerequisite.replace(/,.*/,'')}</span></h3>
-                    <p className="mt-1 text-sm text-gray-400">{p.id} • {p.type} dependency</p>
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between gap-6 rounded-[1.35rem] border border-[#dce6f4] bg-[#f7fbff] px-5 py-6 shadow-[0_8px_20px_rgba(15,33,71,0.03)] sm:px-6 sm:py-7"
+                >
+                  <div className="min-w-0">
+                    <h3 className="text-[1.05rem] font-extrabold text-[#192544] sm:text-[1.1rem]">{p.course}</h3>
+                    <p className="mt-2 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#9aa8c0]">
+                      {p.id} • {p.type} dependency
+                    </p>
                     <div className="mt-3">
-                      <span className="inline-block px-2 py-1 text-xs font-semibold text-[#0f2147] bg-white border border-[#e6eef6] rounded">{p.prerequisite}</span>
+                      <span className="inline-flex items-center rounded-md border border-[#e4ebf7] bg-white px-2.5 py-1 text-[0.7rem] font-bold text-[#1b4dff] shadow-[0_4px_10px_rgba(15,33,71,0.03)]">
+                        {p.prerequisite}
+                      </span>
                     </div>
                   </div>
 
-                  <div>
-                    <button onClick={() => openConfig(p)} className="px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">Configure Dependencies</button>
+                  <div className="shrink-0">
+                    <button
+                      onClick={() => openConfig(p)}
+                      className="rounded-2xl border border-[#dce3f1] bg-white px-6 py-3 text-sm font-semibold text-[#324160] shadow-[0_8px_18px_rgba(15,33,71,0.04)] transition-colors hover:border-[#c4d0e6] hover:text-[#0f2147]"
+                    >
+                      Configure Dependencies
+                    </button>
                   </div>
                 </div>
               ))}
@@ -81,26 +94,35 @@ export function PrerequisiteManager() {
           </div>
         </div>
       </div>
+
       {showModal && selectedPrereq && (
         <Portal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-6">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl mx-auto p-6 sm:p-8 ring-1 ring-gray-100">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-6 sm:items-center sm:px-6">
+            <div className="mx-auto max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ring-1 ring-gray-100 sm:p-8">
               <div className="text-left">
                 <h2 className="text-2xl font-bold text-[#0f2147]">Prerequisite Manager: {selectedPrereq.course}</h2>
-                <p className="mt-2 text-sm text-gray-500">Select courses that must be completed before enrolling in {selectedPrereq.course}.</p>
+                <p className="mt-2 text-sm text-gray-500">
+                  Select courses that must be completed before enrolling in {selectedPrereq.course}.
+                </p>
               </div>
 
-              <div className="mt-6 bg-[#f7fbff] rounded-xl p-6">
-                <div className="bg-white rounded-lg p-6 border border-[#e6eef6]">
+              <div className="mt-6 rounded-xl bg-[#f7fbff] p-6">
+                <div className="rounded-lg border border-[#e6eef6] bg-white p-6">
                   <div className="inline-block">
-                    <span className="inline-block px-4 py-2 text-sm font-bold text-yellow-300 bg-[#0f2147] rounded-lg">{selectedPrereq.prerequisite}</span>
+                    <span className="inline-flex items-center rounded-lg bg-[#0f2147] px-4 py-2 text-sm font-bold text-yellow-300">
+                      {selectedPrereq.prerequisite}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="mt-6 flex items-center justify-between">
-                <button onClick={closeConfig} className="text-sm font-semibold text-gray-400 tracking-widest">Cancel</button>
-                <button onClick={closeConfig} className="px-6 py-3 rounded-xl bg-[#0f2147] text-yellow-400 shadow-md">Save Changes</button>
+                <button onClick={closeConfig} className="text-sm font-semibold tracking-widest text-gray-400">
+                  Cancel
+                </button>
+                <button onClick={closeConfig} className="rounded-xl bg-[#0f2147] px-6 py-3 text-yellow-400 shadow-md">
+                  Save Changes
+                </button>
               </div>
             </div>
           </div>

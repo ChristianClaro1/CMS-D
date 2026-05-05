@@ -3,23 +3,27 @@ import {
   BookOpen,
   Users,
   TrendingUp,
-  List,
+  Sparkles,
   ShieldCheck,
   ClipboardList,
   Calendar,
+  BookMarked,
+  ArrowUpRight,
+  UserRound,
 } from 'lucide-react'
 import DashboardCard from '../components/dashboard/DashboardCard'
 import { useRole } from '@/contexts/RoleContext'
+import { useAuth } from '@/hooks/useAuth'
 import { Link } from 'react-router-dom'
 
 const topStats = [
-  { name: 'Active Catalog', value: 2 },
+  { name: 'Active Catalog', value: 3, icon: BookMarked },
   { name: 'Faculty Hub', value: 3 },
-  { name: 'Under Review', value: 1 },
+  { name: 'Under Review', value: 0, icon: ArrowUpRight },
 ]
 
 const modules = [
-  { title: 'Academic Programs', desc: 'Propose and manage the curriculum lifecycle, including active catalog and prerequisite chains.', icon: List, to: '/courses/manage' },
+  { title: 'Academic Programs', desc: 'Propose and manage the curriculum lifecycle, including active catalog and prerequisite chains.', icon: Sparkles, to: '/courses/manage' },
   { title: 'Active Catalog', desc: 'Browse historical and active courses — the authoritative source of IAE course data.', icon: BookOpen, to: '/courses' },
   { title: 'Faculty Hub', desc: 'Assign faculty to sections and monitor teaching workloads for conflict resolution.', icon: Users, to: '/instructors' },
   { title: 'Enrollment Hub', desc: 'Manage section capacity limits and scheduling synchronized with SRM.', icon: Calendar, to: '/enrollment' },
@@ -29,6 +33,17 @@ const modules = [
 
 export function Dashboard() {
   const { role } = useRole()
+  const { user } = useAuth()
+  const displayName = user?.name?.split(' ')[0] || 'John'
+  const roleLabel = role.toUpperCase()
+  const roleSubline =
+    role === 'Admin'
+      ? 'SYSTEM-WIDE ADMINISTRATIVE ACCESS'
+      : role === 'Registrar'
+        ? 'ACADEMIC RECORDS & SECTION CAPACITY MANAGEMENT'
+        : role === 'Department Chair'
+          ? 'FACULTY WORKLOAD & INSTRUCTION ASSIGNMENT'
+          : 'ACADEMIC PROGRAM AND CURRICULUM DEVELOPMENT PORTAL'
 
   // Filter modules based on role
   const visibleModules = (() => {
@@ -51,71 +66,59 @@ export function Dashboard() {
   })()
 
   return (
-    <div className="space-y-8">
-      <header className="py-6">
-        <div className="max-w-7xl mx-auto">
+    <div className="space-y-6 pb-6">
+      <header className="pt-1">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-4">
           <div>
-            <h2 className="text-4xl font-extrabold text-[#0f2147] tracking-tight italic">WELCOME BACK, JOHN</h2>
-            <p className="mt-2 text-sm text-[#0f2147] italic">SYSTEM-WIDE ADMINISTRATIVE ACCESS</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-3xl font-black italic tracking-tight text-[#0f2147] sm:text-[2.75rem]">
+                WELCOME BACK, {displayName}
+              </h2>
+              <span className="inline-flex items-center rounded-full bg-[#0f2147] px-3.5 py-1 text-[0.65rem] font-extrabold tracking-[0.14em] text-[#ffd233] shadow-[0_10px_24px_rgba(15,33,71,0.18)]">
+                {roleLabel}
+              </span>
+            </div>
+            <p className="mt-2 text-xs font-semibold tracking-[0.28em] text-[#0f2147]/55">
+              {roleSubline}
+            </p>
           </div>
         </div>
       </header>
 
-      {/* Top stat boxes placed outside the hero container */}
-      <div className="max-w-7xl mx-auto -mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 px-6">
-        <Link to="/courses" className="relative bg-white rounded-xl shadow pl-0 block hover:shadow-md">
-          <div className="absolute left-0 inset-y-0 w-1 bg-yellow-400 rounded-l-md"></div>
-          <div className="px-6 py-3 flex items-center space-x-4 ml-3">
-            <div className="bg-gray-50 rounded-md p-3">
-              <BookOpen className="h-6 w-6 text-gray-400" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-[#0f2147]">{topStats[0].value}</div>
-              <div className="text-xs text-gray-500 uppercase">{topStats[0].name}</div>
-            </div>
-          </div>
-        </Link>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 justify-items-center gap-3 px-0 sm:grid-cols-3">
+        {topStats.map((stat, index) => {
+          const Icon = stat.icon ?? (index === 1 ? UserRound : TrendingUp)
+          const isHighlighted = index === 2
 
-        <Link to="/instructors" className="relative bg-white rounded-xl shadow pl-0 block hover:shadow-md">
-          <div className="absolute left-0 inset-y-0 w-1 bg-yellow-400 rounded-l-md"></div>
-          <div className="px-6 py-3 flex items-center space-x-4 ml-3">
-            <div className="bg-gray-50 rounded-md p-3">
-              <Users className="h-6 w-6 text-gray-400" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-[#0f2147]">{topStats[1].value}</div>
-              <div className="text-xs text-gray-500 uppercase">{topStats[1].name}</div>
-            </div>
-          </div>
-        </Link>
-
-        <Link to="/courses/manage" className="relative bg-white rounded-xl shadow pl-0 block hover:shadow-md">
-          <div className="absolute left-0 inset-y-0 w-1 bg-yellow-400 rounded-l-md"></div>
-          <div className="px-6 py-3 flex items-center space-x-4 ml-3">
-            <div className="bg-gray-50 rounded-md p-3">
-              <TrendingUp className="h-6 w-6 text-gray-400" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-[#0f2147]">{topStats[2].value}</div>
-              <div className="text-xs text-gray-500 uppercase">{topStats[2].name}</div>
-            </div>
-          </div>
-        </Link>
+          return (
+            <Link
+              key={stat.name}
+              to={index === 0 ? '/courses' : index === 1 ? '/instructors' : '/courses/manage'}
+              className={`relative block w-full max-w-[350px] rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,33,71,0.08)] transition-transform hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(15,33,71,0.12)] ${
+                isHighlighted ? 'ring-1 ring-[#ffd233] ring-inset' : 'ring-1 ring-[#0f2147]/10 ring-inset'
+              }`}
+            >
+              <div className={`absolute left-0 top-0 h-full w-1.5 rounded-l-2xl ${isHighlighted ? 'bg-[#ffd233]' : 'bg-[#e1e7f7]'}`} />
+              <div className="flex items-center gap-3 px-4 py-3.5 pl-6">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${index === 1 ? 'bg-[#fff2bf]' : 'bg-[#f4f6fb]'}`}>
+                  <Icon className="h-5 w-5 text-[#0f2147]" />
+                </div>
+                <div>
+                  <div className="text-xl font-black text-[#0f2147]">{stat.value}</div>
+                  <div className="mt-1 text-[0.6rem] font-bold tracking-[0.22em] text-[#8d97b3] uppercase">{stat.name}</div>
+                </div>
+              </div>
+            </Link>
+          )
+        })}
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-        {visibleModules.map((m) => (
-          <div key={m.title} className="h-full">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 justify-items-center gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+        {visibleModules.map((m, index) => (
+          <div key={m.title} className={index === 0 ? 'md:col-span-1 w-full flex justify-center' : 'w-full flex justify-center'}>
             <DashboardCard title={m.title} description={m.desc} icon={m.icon} to={m.to} />
           </div>
         ))}
-      </div>
-
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow p-6 text-center">
-          <h3 className="text-lg font-semibold text-[#0f2147]">System Operational</h3>
-          <p className="mt-2 text-sm text-gray-500">All course management modules are currently synchronized and active.</p>
-        </div>
       </div>
     </div>
   )
