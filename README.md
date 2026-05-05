@@ -42,6 +42,12 @@ The Course Management Subsystem (CMS) is the central hub for course content with
 - 99.9% uptime during enrollment periods
 - Support for 500+ concurrent users
 
+## How to Run
+- cd CMS
+- cd frontend
+- npm install --legacy-peer-deps
+- npm run dev
+
 ## Team Members
 - Christian A. Claro
 - Sean Michael V. De Castro
