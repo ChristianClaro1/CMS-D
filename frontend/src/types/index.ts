@@ -15,18 +15,18 @@ export interface Course {
   course_type: 'Lecture' | 'Lab';
   units: number;
   semester: string;
-  classification: 'Core' | 'Elective' | 'Major';
-  status: 'Draft' | 'Active' | 'Archived';
+  classification?: 'Core' | 'Elective' | 'Major' | string;
+  status: string;
   instructor_id?: string;
   instructor_name?: string;
-  section_capacity: number;
-  enrolled_count: number;
+  section_capacity?: number;
+  enrolled_count?: number;
   room_requirement?: string;
-  price: number;
-  prerequisites: string[];
-  is_elective: boolean;
-  created_at: string;
-  updated_at: string;
+  price: number | null;
+  prerequisites?: string[];
+  is_elective?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CourseCatalogResponse {

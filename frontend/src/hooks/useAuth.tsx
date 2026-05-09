@@ -1,12 +1,30 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@/types'
+import { api, clearAuthToken, getAuthToken, setAuthToken } from '@/utils/api'
 
-const mockUser: User = {
-  user_id: 'user-123',
-  role: 'Admin',
-  permissions: ['*'],
-  name: 'John Doe',
-  email: 'john.doe@university.edu',
+const AUTH_USER_KEY = 'auth_user'
+
+type BackendLoginResponse = {
+  access_token: string
+  refresh_token?: string
+  token_type?: string
+  expires_in?: number
+  user: {
+    id: string
+    name?: string
+    email?: string
+    role?: string
+  }
+}
+
+function mapBackendUser(user: BackendLoginResponse['user']): User {
+  return {
+    user_id: user.id,
+    role: user.role || 'Admin',
+    permissions: user.role ? [user.role] : ['*'],
+    name: user.name,
+    email: user.email,
+  }
 }
 
 type AuthContextType = {
@@ -25,11 +43,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('auth_token')
-        if (token) setUser(mockUser)
+        const token = getAuthToken()
+        const storedUser = localStorage.getItem(AUTH_USER_KEY)
+
+        if (token && storedUser) {
+          setUser(JSON.parse(storedUser) as User)
+        } else if (token) {
+          setUser({
+            user_id: 'authenticated-user',
+            role: 'Admin',
+            permissions: ['*'],
+          })
+        }
       } catch (error) {
         console.error('Auth check failed:', error)
-        localStorage.removeItem('auth_token')
+        clearAuthToken()
+        localStorage.removeItem(AUTH_USER_KEY)
       } finally {
         setIsLoading(false)
       }
@@ -38,23 +67,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const login = async (email: string, password: string) => {
-    void email
-    void password
     try {
-      const response = { success: true, token: 'mock-jwt-token', user: mockUser }
-      if (response.success) {
-        localStorage.setItem('auth_token', response.token)
-        setUser(response.user)
-        return { success: true }
+      const response = (await api.post('/auth/login', { email, password })) as BackendLoginResponse
+      if (!response?.access_token || !response.user) {
+        return { success: false, error: 'Login failed' }
       }
-      return { success: false, error: 'Invalid credentials' }
+
+      const mappedUser = mapBackendUser(response.user)
+      setAuthToken(response.access_token)
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(mappedUser))
+      setUser(mappedUser)
+      return { success: true }
     } catch (error) {
-      return { success: false, error: 'Login failed' }
+      const message = error instanceof Error ? error.message : 'Login failed'
+      return { success: false, error: message }
     }
   }
 
   const logout = () => {
-    localStorage.removeItem('auth_token')
+    clearAuthToken()
+    localStorage.removeItem(AUTH_USER_KEY)
     setUser(null)
   }
 

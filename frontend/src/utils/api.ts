@@ -1,14 +1,30 @@
-type Params = Record<string, any>
+type Params = Record<string, string | number | boolean | undefined | null>
 
 const BASE = (((import.meta as any).env?.VITE_API_URL) as string) || 'http://localhost:8000/api/v1'
+
+export function getAuthToken() {
+  return localStorage.getItem('auth_token')
+}
+
+export function setAuthToken(token: string) {
+  localStorage.setItem('auth_token', token)
+}
+
+export function clearAuthToken() {
+  localStorage.removeItem('auth_token')
+}
 
 async function request(method: string, path: string, body?: any, params?: Params) {
   const url = new URL(BASE + path)
   if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)))
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) {
+        url.searchParams.set(k, String(v))
+      }
+    })
   }
 
-  const token = localStorage.getItem('auth_token')
+  const token = getAuthToken()
 
   const res = await fetch(url.toString(), {
     method,

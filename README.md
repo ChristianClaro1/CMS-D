@@ -15,7 +15,7 @@ The Course Management Subsystem (CMS) is the central hub for course content with
 
 ## Technology Stack
 - **Frontend**: React.js + TypeScript, Tailwind CSS, Hero UI, Vite
-- **Backend**: Node.js + Express.js (REST API)
+- **Backend**: Node.js + Express.js + Prisma (REST API)
 - **Database**: PostgreSQL with Redis caching
 - **Messaging**: Kafka for event publishing
 - **Integration**: REST API calls to other subsystems, ESB integration
@@ -44,8 +44,7 @@ The Course Management Subsystem (CMS) is the central hub for course content with
 
 ## How to Run
 - cd CMS
-- cd frontend
-- npm install --legacy-peer-deps
+- npm run setup
 - npm run dev
 
 ## Team Members

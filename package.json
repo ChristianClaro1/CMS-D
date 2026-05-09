@@ -2,19 +2,19 @@
   "name": "course-management-system",
   "version": "1.0.0",
   "description": "Course Management Subsystem (CMS) for Intelligent Academic Ecosystem",
-  "main": "backend/src/server.js",
+  "main": "../new-backend/dist/server.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm run dev",
+    "dev:backend": "cd ..\\new-backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm run build",
+    "build:backend": "cd ..\\new-backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "start": "cd backend && npm start",
+    "start": "cd ..\\new-backend && npm start",
     "test": "npm run test:backend && npm run test:frontend",
-    "test:backend": "cd backend && npm test",
+    "test:backend": "cd ..\\new-backend && npm test",
     "test:frontend": "cd frontend && npm test",
-    "setup": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "setup": "npm install && cd ..\\new-backend && npm install && cd ..\\CMS\\frontend && npm install"
   },
   "keywords": [
     "course-management",

@@ -3,6 +3,10 @@
 
 Write-Host "🚀 Setting up Course Management System (CMS)..." -ForegroundColor Green
 
+$repoRoot = $PSScriptRoot
+$backendRoot = Join-Path $repoRoot "..\new-backend"
+$frontendRoot = Join-Path $repoRoot "frontend"
+
 # Check if Node.js is installed
 try {
     $nodeVersion = node --version
@@ -19,29 +23,31 @@ try {
 
 # Install backend dependencies
 Write-Host "📦 Installing backend dependencies..." -ForegroundColor Yellow
-Set-Location backend
+Push-Location $backendRoot
 npm install
+Pop-Location
 
 # Install frontend dependencies
 Write-Host "📦 Installing frontend dependencies..." -ForegroundColor Yellow
-Set-Location frontend
+Push-Location $frontendRoot
 npm install
+Pop-Location
 
 # Copy environment files
 Write-Host "📝 Setting up environment configuration..." -ForegroundColor Yellow
-if (-not (Test-Path "backend\.env")) {
-    Copy-Item "backend\.env.example" "backend\.env"
-    Write-Host "📄 Created backend\.env from example" -ForegroundColor Green
+if (-not (Test-Path (Join-Path $backendRoot ".env"))) {
+    Copy-Item (Join-Path $backendRoot ".env.example") (Join-Path $backendRoot ".env")
+    Write-Host "📄 Created new-backend\.env from example" -ForegroundColor Green
 }
 
-if (-not (Test-Path "frontend\.env")) {
-    Copy-Item "frontend\.env.example" "frontend\.env" -ErrorAction SilentlyContinue
+if (-not (Test-Path (Join-Path $frontendRoot ".env"))) {
+    Copy-Item (Join-Path $frontendRoot ".env.example") (Join-Path $frontendRoot ".env") -ErrorAction SilentlyContinue
     Write-Host "📄 Created frontend\.env from example" -ForegroundColor Green
 }
 
 # Create logs directory
 Write-Host "📁 Creating logs directory..." -ForegroundColor Yellow
-New-Item -ItemType Directory -Path "backend\logs" -Force
+New-Item -ItemType Directory -Path (Join-Path $backendRoot "logs") -Force
 
 # Check if Docker is available
 Write-Host "🐳 Checking Docker..." -ForegroundColor Yellow
@@ -88,9 +94,9 @@ Write-Host ""
 Write-Host "🎉 Setup completed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "📋 Next steps:" -ForegroundColor Cyan
-Write-Host "   1. Configure your database connection in backend\.env" -ForegroundColor White
+Write-Host "   1. Configure your database connection in new-backend\.env" -ForegroundColor White
 Write-Host "   2. Start PostgreSQL and Redis services" -ForegroundColor White
-Write-Host "   3. Run database migrations: cd backend && npm run migrate" -ForegroundColor White
+Write-Host "   3. Run database sync: cd new-backend && npm run db:migrate" -ForegroundColor White
 Write-Host "   4. Start development servers: npm run dev" -ForegroundColor White
 Write-Host ""
 Write-Host "🌐 Access application:" -ForegroundColor Cyan
@@ -105,11 +111,11 @@ $choice = Read-Host "Do you want to start the development servers now? (Y/N): " 
 if ($choice -eq 'Y') {
     Write-Host "🚀 Starting development servers..." -ForegroundColor Green
     Start-Job -Name "Backend" -ScriptBlock {
-        Set-Location backend
+        Set-Location $using:backendRoot
         npm run dev
     }
     Start-Job -Name "Frontend" -ScriptBlock {
-        Set-Location frontend
+        Set-Location $using:frontendRoot
         npm run dev
     }
     Write-Host "✅ Both servers started! Access the application at http://localhost:3000" -ForegroundColor Green
