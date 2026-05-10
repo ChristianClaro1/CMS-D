@@ -11,6 +11,7 @@ declare global {
 }
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
+  if (req.method === "OPTIONS") return next();
   const token = extractToken(req);
   if (!token) {
     return commonErrors.unauthorized(res);
