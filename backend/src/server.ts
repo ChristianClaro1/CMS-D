@@ -16,6 +16,13 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "1mb" }));
 
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "healthy", timestamp: new Date().toISOString(), version: "1.0.0" });
