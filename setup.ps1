@@ -4,7 +4,7 @@
 Write-Host "🚀 Setting up Course Management System (CMS)..." -ForegroundColor Green
 
 $repoRoot = $PSScriptRoot
-$backendRoot = Join-Path $repoRoot "..\new-backend"
+$backendRoot = Join-Path $repoRoot "backend"
 $frontendRoot = Join-Path $repoRoot "frontend"
 
 # Check if Node.js is installed
@@ -37,7 +37,7 @@ Pop-Location
 Write-Host "📝 Setting up environment configuration..." -ForegroundColor Yellow
 if (-not (Test-Path (Join-Path $backendRoot ".env"))) {
     Copy-Item (Join-Path $backendRoot ".env.example") (Join-Path $backendRoot ".env")
-    Write-Host "📄 Created new-backend\.env from example" -ForegroundColor Green
+    Write-Host "📄 Created backend\.env from example" -ForegroundColor Green
 }
 
 if (-not (Test-Path (Join-Path $frontendRoot ".env"))) {
@@ -94,9 +94,9 @@ Write-Host ""
 Write-Host "🎉 Setup completed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "📋 Next steps:" -ForegroundColor Cyan
-Write-Host "   1. Configure your database connection in new-backend\.env" -ForegroundColor White
+Write-Host "   1. Configure your database connection in backend\.env" -ForegroundColor White
 Write-Host "   2. Start PostgreSQL and Redis services" -ForegroundColor White
-Write-Host "   3. Run database sync: cd new-backend && npm run db:migrate" -ForegroundColor White
+Write-Host "   3. Run database sync: cd backend && npm run db:migrate" -ForegroundColor White
 Write-Host "   4. Start development servers: npm run dev" -ForegroundColor White
 Write-Host ""
 Write-Host "🌐 Access application:" -ForegroundColor Cyan

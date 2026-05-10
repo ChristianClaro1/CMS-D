@@ -73,7 +73,7 @@ services:
   # Backend API
   backend:
     build:
-      context: ../new-backend
+      context: ./backend
       dockerfile: Dockerfile
     container_name: cms-backend
     environment:

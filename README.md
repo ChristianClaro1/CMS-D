@@ -43,7 +43,7 @@ The Course Management Subsystem (CMS) is the central hub for course content with
 - Support for 500+ concurrent users
 
 ## How to Run
-- cd CMS
+- cd dep-cms
 - npm run setup
 - npm run dev
 

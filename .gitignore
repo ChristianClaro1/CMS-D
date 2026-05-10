@@ -5,12 +5,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # Production builds
-/new-backend/dist/
+/backend/dist/
 /frontend/dist/
 /frontend/build/
 
 # Backend runtime files
-/new-backend/logs/
+/backend/logs/
 
 # Environment variables
 .env
