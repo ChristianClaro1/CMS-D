@@ -20,18 +20,6 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "1mb" }));
 
-// Ensure OPTIONS preflight is handled before auth/routes
-app.options("*", cors({
-  origin: [/\.vercel\.app$/, "http://localhost:5173", "http://localhost:3000"],
-  credentials: true,
-}));
-
-// Short-circuit any remaining preflight requests
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") return res.sendStatus(204);
-  next();
-});
-
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "healthy", timestamp: new Date().toISOString(), version: "1.0.0" });
