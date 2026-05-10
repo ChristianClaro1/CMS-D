@@ -11,11 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
 app.use(cors({
-  origin: [
-    "https://cms-8drq22utm-christian-claros-projects.vercel.app/",
-    "http://localhost:3000",
-    "http://localhost:5173",
-  ],
+  origin: "https://cms-8drq22utm-christian-claros-projects.vercel.app/",
   credentials: true,
 }));
 app.use(express.json({ limit: "1mb" }));
