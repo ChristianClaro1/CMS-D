@@ -29,6 +29,10 @@ async function request(method: string, path: string, body?: any, params?: Params
     })
   }
 
+  console.log("BASE:", BASE);
+  console.log("PATH:", path);
+  console.log("FULL URL:", BASE + path);
+
   const token = getAuthToken()
 
   const res = await fetch(url.toString(), {
