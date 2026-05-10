@@ -4,6 +4,8 @@ if (!import.meta.env.VITE_API_URL) {
   throw new Error("VITE_API_URL is not defined");
 }
 
+console.log("🔥 API MODULE LOADED");
+
 const BASE = import.meta.env.VITE_API_URL;
 console.log("VITE_API_URL =", import.meta.env.VITE_API_URL)
 
@@ -29,7 +31,7 @@ async function request(method: string, path: string, body?: any, params?: Params
     })
   }
 
-  console.log("BASE:", BASE);
+  console.log("REQUEST BASE AT EXEC TIME:", BASE);
   console.log("PATH:", path);
   console.log("FULL URL:", BASE + path);
 
