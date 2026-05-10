@@ -31,7 +31,7 @@ async function request(method: string, path: string, body?: any, params?: Params
     })
   }
 
-  console.trace("API CALL TRACE");
+
 
   const token = getAuthToken()
 
