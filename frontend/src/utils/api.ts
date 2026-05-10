@@ -19,7 +19,7 @@ export function clearAuthToken() {
 }
 
 async function request(method: string, path: string, body?: any, params?: Params) {
-  const url = new URL(BASE + path)
+  const url = new URL(path, BASE)
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null) {
