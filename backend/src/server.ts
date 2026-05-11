@@ -9,13 +9,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
   process.env.CORS_ORIGIN,
-  "https://cms-8drq22utm-christian-claros-projects.vercel.app",
+  "https://cms-d-nu.vercel.app/",
   "http://localhost:3000",
   "http://localhost:5173",
   "http://localhost:4173",
 ]
   .filter((origin): origin is string => Boolean(origin))
   .map((origin) => origin.replace(/\/$/, ""));
+
+const isAllowedOrigin = (origin: string) => {
+  const normalizedOrigin = origin.replace(/\/$/, "");
+
+  if (allowedOrigins.includes(normalizedOrigin)) {
+    return true;
+  }
+
+  return /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(normalizedOrigin);
+};
 
 
 app.use(helmet());
@@ -25,8 +35,7 @@ app.use(cors({
       return callback(null, true);
     }
 
-    const normalizedOrigin = origin.replace(/\/$/, "");
-    callback(null, allowedOrigins.includes(normalizedOrigin));
+    callback(null, isAllowedOrigin(origin));
   },
   credentials: true,
 }));

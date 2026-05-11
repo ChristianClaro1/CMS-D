@@ -4,9 +4,7 @@ if (!import.meta.env.VITE_API_URL) {
   throw new Error("VITE_API_URL is not defined");
 }
 
-
-
-const BASE = import.meta.env.VITE_API_URL;
+const API_BASE = new URL("/api/v1/", import.meta.env.VITE_API_URL);
 
 export function getAuthToken() {
   return localStorage.getItem('auth_token')
@@ -21,7 +19,8 @@ export function clearAuthToken() {
 }
 
 async function request(method: string, path: string, body?: any, params?: Params) {
-  const url = new URL(path, BASE)
+  const normalizedPath = path.replace(/^\/+/, '')
+  const url = new URL(normalizedPath, API_BASE)
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null) {
@@ -29,8 +28,6 @@ async function request(method: string, path: string, body?: any, params?: Params
       }
     })
   }
-
-
 
   const token = getAuthToken()
 
