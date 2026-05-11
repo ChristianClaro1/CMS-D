@@ -1,18 +1,46 @@
+import { useEffect, useState } from 'react'
 import NavTab from '@/components/NavTab'
+import { api } from '@/utils/api'
 import { useRole } from '@/contexts/RoleContext'
-
-const mockProposals: Array<{
-  id: string
-  code: string
-  title: string
-  proposer: string
-  units: number
-  status: string
-  note: string
-}> = []
+import type { Course } from '@/types'
 
 export function ProposalOversight() {
   const { role } = useRole()
+  const [proposals, setProposals] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+  const [savingId, setSavingId] = useState<string | null>(null)
+
+  const loadProposals = async () => {
+    setLoading(true)
+    try {
+      const response = await api.get('/courses', { status: 'draft', limit: 100 })
+      setProposals(response?.courses ?? [])
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to load proposals', error)
+      setProposals([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadProposals()
+  }, [])
+
+  const updateProposalStatus = async (courseId: string, status: 'Active' | 'Archived') => {
+    setSavingId(courseId)
+    try {
+      await api.patch(`/courses/${courseId}/status`, { status })
+      await loadProposals()
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`Failed to mark proposal as ${status.toLowerCase()}`, error)
+      alert(`Failed to ${status === 'Active' ? 'approve' : 'reject'} proposal`)
+    } finally {
+      setSavingId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -42,7 +70,11 @@ export function ProposalOversight() {
                 </p>
               </div>
 
-              {mockProposals.length === 0 ? (
+              {loading ? (
+                <div className="flex min-h-[300px] items-center justify-center rounded-xl bg-white px-6 py-10">
+                  <p className="text-[1.05rem] font-medium text-[#8d9abc] sm:text-[1.1rem]">Loading proposals...</p>
+                </div>
+              ) : proposals.length === 0 ? (
                 <div className="flex min-h-[300px] items-center justify-center rounded-xl bg-white px-6 py-10">
                   <p className="text-[1.05rem] font-medium text-[#8d9abc] sm:text-[1.1rem]">
                     No pending proposals for review.
@@ -50,30 +82,46 @@ export function ProposalOversight() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {mockProposals.map((p) => (
-                    <div key={p.id} className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
+                  {proposals.map((proposal) => (
+                    <div key={proposal.course_id} className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 min-w-0">
                           <div className="w-12 h-12 bg-[#f4f6fb] rounded-md flex items-center justify-center text-sm font-bold text-[#0f2147]">
-                            {p.code.slice(0, 2)}
+                            {proposal.course_code.slice(0, 2)}
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-3 flex-wrap">
-                              <div className="text-lg font-bold text-[#0f2147]">{p.title}</div>
+                              <div className="text-lg font-bold text-[#0f2147]">{proposal.course_name}</div>
                               <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-emerald-600">
-                                {p.status}
+                                {proposal.status}
                               </span>
                             </div>
                             <div className="text-sm text-gray-500 mt-1">
-                              {p.code} • {p.units} Units • Proposed by {p.proposer}
+                              {proposal.course_code} • {proposal.units} Units • Semester {proposal.semester}
                             </div>
-                            <div className="mt-2 text-sm text-gray-400 italic">"{p.note}"</div>
+                            <div className="mt-2 text-sm text-gray-400 italic">
+                              Instructor: {proposal.instructor_name || 'Unassigned'}
+                            </div>
                           </div>
                         </div>
 
                         <div className="flex gap-3 shrink-0">
-                          <button className="px-4 py-2 rounded-md bg-green-400 text-white font-semibold">APPROVE</button>
-                          <button className="px-4 py-2 rounded-md bg-red-100 text-red-600 font-semibold">REJECT</button>
+                          <button
+                            type="button"
+                            onClick={() => void updateProposalStatus(proposal.course_id, 'Active')}
+                            disabled={savingId === proposal.course_id}
+                            className="px-4 py-2 rounded-md bg-green-400 text-white font-semibold disabled:opacity-60"
+                          >
+                            {savingId === proposal.course_id ? 'Saving...' : 'APPROVE'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void updateProposalStatus(proposal.course_id, 'Archived')}
+                            disabled={savingId === proposal.course_id}
+                            className="px-4 py-2 rounded-md bg-red-100 text-red-600 font-semibold disabled:opacity-60"
+                          >
+                            REJECT
+                          </button>
                         </div>
                       </div>
                     </div>

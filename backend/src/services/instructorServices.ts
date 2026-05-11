@@ -35,6 +35,65 @@ export async function assignInstructor(courseId: string, instructorId: string, s
   });
 }
 
+export async function updateInstructorAssignment(courseId: string, oldSection: string, newSection: string) {
+  const course = await prisma.course.findUnique({ where: { course_id: courseId } });
+  if (!course) return null;
+
+  const assignment = await prisma.instructorAssignment.findUnique({
+    where: {
+      course_id_section_semester: {
+        course_id: courseId,
+        section: oldSection,
+        semester: course.semester,
+      },
+    },
+  });
+
+  if (!assignment) return null;
+
+  if (oldSection !== newSection) {
+    const conflict = await prisma.instructorAssignment.findFirst({
+      where: {
+        course_id: courseId,
+        section: newSection,
+        semester: course.semester,
+      },
+    });
+
+    if (conflict) {
+      throw new Error(`Section ${newSection} is already assigned for this course and semester.`);
+    }
+  }
+
+  return await prisma.instructorAssignment.update({
+    where: {
+      course_id_section_semester: {
+        course_id: courseId,
+        section: oldSection,
+        semester: course.semester,
+      },
+    },
+    data: {
+      section: newSection,
+    },
+  });
+}
+
+export async function removeInstructorAssignment(courseId: string, section: string) {
+  const course = await prisma.course.findUnique({ where: { course_id: courseId } });
+  if (!course) return null;
+
+  const deleted = await prisma.instructorAssignment.deleteMany({
+    where: {
+      course_id: courseId,
+      section,
+      semester: course.semester,
+    },
+  });
+
+  return deleted.count > 0 ? deleted : null;
+}
+
 export async function getInstructorsBySemester(semester: string) {
   const instructors = await prisma.instructor.findMany({
     include: {

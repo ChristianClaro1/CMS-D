@@ -30,6 +30,7 @@ export async function getCatalog(semester?: string, status?: string, page: numbe
     price: course.pricing ? Number(course.pricing.base_fee) : null,
     section_capacity: course.section_capacity,
     instructor_id: course.instructorAssignments[0]?.instructor_id || null,
+    instructor_name: course.instructorAssignments[0]?.instructor.instructor_name || null,
     is_elective: course.classification === "Elective",
     semester: course.semester,
     status: course.status.toLowerCase(),

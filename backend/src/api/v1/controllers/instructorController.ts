@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { assignInstructorSchema } from "../validators/instructorValidator";
-import { assignInstructor, getInstructorsBySemester } from "../../../services/instructorServices";
+import { assignInstructor, getInstructorsBySemester, removeInstructorAssignment, updateInstructorAssignment } from "../../../services/instructorServices";
 import { logAudit } from "../../../services/auditLogServices";
 import { successResponse, commonErrors } from "../../../utils/response";
 
@@ -47,6 +47,69 @@ export async function getAssignments(req: Request, res: Response, next: NextFunc
 
     const assignments = await getInstructorsBySemester(semester);
     return successResponse(res, { semester, assignments });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function editAssignment(req: Request, res: Response, next: NextFunction) {
+  try {
+    const courseId = req.params.id as string;
+    const oldSection = req.params.section as string;
+    const data = assignInstructorSchema.parse(req.body);
+
+    const assignment = await updateInstructorAssignment(courseId, oldSection, data.section);
+    if (!assignment) {
+      return commonErrors.notFound(res, "Assignment not found.");
+    }
+
+    await logAudit(
+      req.user!.userId,
+      req.user!.role,
+      "INSTRUCTOR_ASSIGNMENT_UPDATED",
+      courseId,
+      { old_section: oldSection, new_section: data.section },
+      req.ip || undefined
+    );
+
+    return successResponse(res, {
+      course_id: courseId,
+      section: data.section,
+      assignment_updated: true,
+      updated_at: assignment.assigned_at.toISOString(),
+    });
+  } catch (error: any) {
+    if (error.message?.includes("already assigned")) {
+      return commonErrors.conflict(res, error.message);
+    }
+    next(error);
+  }
+}
+
+export async function deleteAssignment(req: Request, res: Response, next: NextFunction) {
+  try {
+    const courseId = req.params.id as string;
+    const section = req.params.section as string;
+
+    const removed = await removeInstructorAssignment(courseId, section);
+    if (!removed) {
+      return commonErrors.notFound(res, "Assignment not found.");
+    }
+
+    await logAudit(
+      req.user!.userId,
+      req.user!.role,
+      "INSTRUCTOR_ASSIGNMENT_REMOVED",
+      courseId,
+      { section },
+      req.ip || undefined
+    );
+
+    return successResponse(res, {
+      course_id: courseId,
+      section,
+      removed: true,
+    });
   } catch (error) {
     next(error);
   }

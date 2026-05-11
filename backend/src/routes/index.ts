@@ -7,6 +7,7 @@ import prerequisiteRoutes from "../api/v1/routes/prerequisiteRoutes";
 import catalogRoutes from "../api/v1/routes/catalogRoutes";
 import pricingRoutes from "../api/v1/routes/pricingRoutes";
 import availabilityRoutes from "../api/v1/routes/availabilityRoutes";
+import instructorDirectoryRoutes from "../api/v1/routes/instructorDirectoryRoutes";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/courses", prerequisiteRoutes);
 router.use("/courses", pricingRoutes);
 router.use("/courses", availabilityRoutes);
 router.use("/courses", catalogRoutes);
+router.use("/instructors", instructorDirectoryRoutes);
 
 export default router;

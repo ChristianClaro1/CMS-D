@@ -99,8 +99,8 @@ export function CourseCatalog() {
 
   const visibleCourses = courses.filter((course) => {
     const normalizedStatus = normalizeStatus(course.status)
-    const matchesSearch = [course.course_code, course.course_name, course.course_type, course.status]
-      .filter(Boolean)
+    const matchesSearch = [course.course_code, course.course_name, course.course_type, course.status, course.instructor_name, course.instructor_id]
+      .filter((value): value is string => Boolean(value))
       .some((value) => value.toLowerCase().includes(searchTerm.toLowerCase()))
 
     const matchesStatus = statusFilter === 'all' || normalizedStatus === statusFilter
@@ -317,6 +317,10 @@ export function CourseCatalog() {
                         <span>{course.is_elective ? 'Elective' : 'Core'}</span>
                         <span className="text-[#c0c8d8]">•</span>
                         <span className="text-emerald-600">PNAN</span>
+                      </div>
+
+                      <div className="mt-3 text-sm text-[#6b7280]">
+                        Instructor: <span className="font-semibold text-[#0f2147]">{course.instructor_name || 'Unassigned'}</span>
                       </div>
 
                       <div className="mt-4 flex flex-wrap items-center gap-2">
