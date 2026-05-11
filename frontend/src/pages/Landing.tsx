@@ -53,19 +53,6 @@ export function Landing() {
               </p>
             </div>
 
-            <div className="relative space-y-4 text-sm text-white/55">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
-                  <div className="text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#ffd233]">Role-based</div>
-                  <div className="mt-2 text-white/80">Secure access for curriculum and admin workflows.</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
-                  <div className="text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#ffd233]">Connected</div>
-                  <div className="mt-2 text-white/80">Built to work with the deployed backend API.</div>
-                </div>
-              </div>
-            </div>
-
           </div>
 
           <div className="flex items-center justify-center bg-[#f7f9ff] px-6 py-10 sm:px-10 lg:px-12">

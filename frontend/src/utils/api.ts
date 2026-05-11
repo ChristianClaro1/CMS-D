@@ -1,10 +1,13 @@
 type Params = Record<string, string | number | boolean | undefined | null>
 
-if (!import.meta.env.VITE_API_URL) {
+const API_BASE_FALLBACK = import.meta.env.DEV ? "http://localhost:8000" : undefined
+const API_URL = import.meta.env.VITE_API_URL || API_BASE_FALLBACK
+
+if (!API_URL) {
   throw new Error("VITE_API_URL is not defined");
 }
 
-const API_BASE = new URL("/api/v1/", import.meta.env.VITE_API_URL);
+const API_BASE = new URL("/api/v1/", API_URL);
 
 export function getAuthToken() {
   return localStorage.getItem('auth_token')

@@ -17,14 +17,14 @@ import { useAuth } from '@/hooks/useAuth'
 import { Link } from 'react-router-dom'
 
 const topStats = [
-  { name: 'Active Catalog', value: 3, icon: BookMarked },
+  { name: 'Academic Catalog', value: 3, icon: BookMarked },
   { name: 'Faculty Hub', value: 3 },
   { name: 'Under Review', value: 0, icon: ArrowUpRight },
 ]
 
 const modules = [
-  { title: 'Academic Programs', desc: 'Propose and manage the curriculum lifecycle, including active catalog and prerequisite chains.', icon: Sparkles, to: '/courses/manage' },
-  { title: 'Active Catalog', desc: 'Browse historical and active courses — the authoritative source of IAE course data.', icon: BookOpen, to: '/courses' },
+  { title: 'Academic Programs', desc: 'Propose and manage the curriculum lifecycle, including academic catalog and prerequisite chains.', icon: Sparkles, to: '/courses/manage' },
+  { title: 'Academic Catalog', desc: 'Browse historical and active courses — the authoritative source of IAE course data.', icon: BookOpen, to: '/courses' },
   { title: 'Faculty Hub', desc: 'Assign faculty to sections and monitor teaching workloads for conflict resolution.', icon: Users, to: '/instructors' },
   { title: 'Enrollment Hub', desc: 'Manage section capacity limits and scheduling synchronized with SRM.', icon: Calendar, to: '/enrollment' },
   { title: 'Security Logs', desc: 'Trace administrative changes and ensure system accountability for audit purposes.', icon: ShieldCheck, to: '/reports' },
@@ -34,7 +34,8 @@ const modules = [
 export function Dashboard() {
   const { role } = useRole()
   const { user } = useAuth()
-  const displayName = user?.name?.split(' ')[0] || 'John'
+  const parts = user?.name?.split(' ') || [];
+  const displayName = parts[parts.length - 1];
   const roleLabel = role.toUpperCase()
   const roleSubline =
     role === 'Admin'
