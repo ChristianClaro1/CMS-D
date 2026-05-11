@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
   process.env.CORS_ORIGIN,
-  "https://cms-d-nu.vercel.app/",
+  "https://cms-d-nu.vercel.app",
   "http://localhost:3000",
   "http://localhost:5173",
   "http://localhost:4173",
