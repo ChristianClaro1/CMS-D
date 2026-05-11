@@ -33,6 +33,7 @@ export function ProposalOversight() {
     try {
       await api.patch(`/courses/${courseId}/status`, { status })
       await loadProposals()
+      window.dispatchEvent(new Event('cms:proposals-updated'))
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(`Failed to mark proposal as ${status.toLowerCase()}`, error)

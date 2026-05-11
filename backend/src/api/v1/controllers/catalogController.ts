@@ -28,8 +28,8 @@ export async function getCurriculumMapHandler(req: Request, res: Response, next:
 export async function getEventsHandler(req: Request, res: Response, next: NextFunction) {
   try {
     const query = eventsQuerySchema.parse(req.query);
-    const events = await getEvents(query.course_id, query.event_type, query.limit);
-    return successResponse(res, { total: events.length, events });
+    const result = await getEvents(query.course_id, query.event_type, query.page, query.limit);
+    return successResponse(res, result);
   } catch (error) {
     next(error);
   }

@@ -68,8 +68,15 @@ export function Dashboard() {
 
     void loadUnderReviewCount()
 
+    const handleProposalUpdate = () => {
+      void loadUnderReviewCount()
+    }
+
+    window.addEventListener('cms:proposals-updated', handleProposalUpdate)
+
     return () => {
       alive = false
+      window.removeEventListener('cms:proposals-updated', handleProposalUpdate)
     }
   }, [])
 

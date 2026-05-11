@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Calendar, RefreshCcw, Search } from 'lucide-react'
 import { api } from '@/utils/api'
 
@@ -34,22 +34,29 @@ function summarizeChanges(changedFields?: Record<string, unknown> | null) {
 
 export function Reports() {
   const [events, setEvents] = useState<AuditEvent[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [eventType, setEventType] = useState('')
+  const [eventTypeInput, setEventTypeInput] = useState('')
+  const [activeEventType, setActiveEventType] = useState('')
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const pageSize = 20
 
-  const loadEvents = async (query?: string) => {
+  const loadEvents = async () => {
     setLoading(true)
     setError(null)
 
     try {
       const response = await api.get('/courses/events', {
-        limit: 100,
-        event_type: query?.trim() || undefined,
+        page,
+        limit: pageSize,
+        event_type: activeEventType.trim() || undefined,
       })
 
       setEvents(response?.events ?? [])
+      setTotal(response?.total ?? response?.events?.length ?? 0)
       setLastUpdated(new Date().toISOString())
     } catch (requestError) {
       // eslint-disable-next-line no-console
@@ -63,13 +70,17 @@ export function Reports() {
 
   useEffect(() => {
     void loadEvents()
-  }, [])
+  }, [page, activeEventType, refreshKey])
 
-  const visibleEvents = useMemo(() => events, [events])
+  const totalPages = Math.max(Math.ceil(total / pageSize), 1)
+  const canGoPrev = page > 1
+  const canGoNext = page < totalPages
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    void loadEvents(eventType)
+    setActiveEventType(eventTypeInput)
+    setPage(1)
+    setRefreshKey((value) => value + 1)
   }
 
   return (
@@ -91,8 +102,8 @@ export function Reports() {
             <div className="relative min-w-[16rem] flex-1 max-w-xl">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94a3bd]" />
               <input
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
+                value={eventTypeInput}
+                onChange={(e) => setEventTypeInput(e.target.value)}
                 placeholder="Filter by action, for example COURSE_CREATED"
                 className="w-full rounded-full border border-[#dfe7f3] bg-white px-11 py-3 text-sm font-semibold text-[#0f2147] shadow-[0_8px_20px_rgba(15,33,71,0.05)] outline-none transition focus:border-[#b9c7de]"
               />
@@ -106,8 +117,10 @@ export function Reports() {
             <button
               type="button"
               onClick={() => {
-                setEventType('')
-                void loadEvents()
+                setEventTypeInput('')
+                setActiveEventType('')
+                setPage(1)
+                setRefreshKey((value) => value + 1)
               }}
               className="inline-flex items-center gap-2 rounded-full border border-[#dfe7f3] bg-white px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-[#0f2147] shadow-[0_8px_20px_rgba(15,33,71,0.05)] transition hover:bg-[#f8fbff]"
             >
@@ -117,7 +130,7 @@ export function Reports() {
           </form>
 
           <div className="text-right text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[#6f7f9d]">
-            <div>{visibleEvents.length} events loaded</div>
+            <div>{total} events total</div>
             <div>{lastUpdated ? `Updated ${fmtDate(lastUpdated)}` : 'Not updated yet'}</div>
           </div>
         </div>
@@ -134,7 +147,7 @@ export function Reports() {
                 <p className="text-sm text-[#7c879f]">{error}</p>
                 <button
                   type="button"
-                  onClick={() => void loadEvents(eventType)}
+                  onClick={() => setRefreshKey((value) => value + 1)}
                   className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#0f2147] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white"
                 >
                   <RefreshCcw className="h-4 w-4" />
@@ -142,12 +155,12 @@ export function Reports() {
                 </button>
               </div>
             </div>
-          ) : visibleEvents.length === 0 ? (
+          ) : events.length === 0 ? (
             <div className="flex min-h-[320px] items-center justify-center px-6 py-10 text-center">
               <div className="max-w-md space-y-3">
                 <p className="text-[1.05rem] font-semibold text-[#0f2147]">No audit events found</p>
                 <p className="text-sm text-[#7c879f]">
-                  {eventType.trim()
+                  {activeEventType.trim()
                     ? 'Try a different action name or clear the filter to view the full log history.'
                     : 'Audit events will appear here as courses, instructors, and sections are updated.'}
                 </p>
@@ -180,7 +193,7 @@ export function Reports() {
               </thead>
 
               <tbody>
-                {visibleEvents.map((event, index) => (
+                {events.map((event, index) => (
                   <tr key={`${event.timestamp}-${event.user_id}-${event.event}-${index}`} className="border-t border-[#edf1f7] transition-colors hover:bg-[#f9fbfe]">
                     <td className="px-6 py-5 align-middle">
                       <div className="flex items-center gap-3 min-w-0">
@@ -235,7 +248,30 @@ export function Reports() {
                 ))}
               </tbody>
             </table>
-          </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#edf1f7] bg-[#fbfcfe] px-6 py-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7a88a4]">
+                  Page {page} of {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((value) => Math.max(value - 1, 1))}
+                    disabled={!canGoPrev || loading}
+                    className="rounded-full border border-[#dfe7f3] bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-[#0f2147] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPage((value) => Math.min(value + 1, totalPages))}
+                    disabled={!canGoNext || loading}
+                    className="rounded-full border border-[#dfe7f3] bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-[#0f2147] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
