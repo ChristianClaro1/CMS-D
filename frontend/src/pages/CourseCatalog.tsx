@@ -326,9 +326,24 @@ export function CourseCatalog() {
                       <div className="mt-4 flex flex-wrap items-center gap-2">
                         <span className="text-[0.7rem] font-bold uppercase tracking-[0.24em] text-[#8d97b3]">Prereq:</span>
                         {Array.isArray(course.prerequisites) && course.prerequisites.length > 0 ? (
-                          <span className="inline-flex items-center rounded-md bg-[#fff0b8] px-3 py-1 text-[0.72rem] font-extrabold tracking-[0.1em] text-[#0f2147] shadow-[0_4px_10px_rgba(15,33,71,0.04)]">
-                            {course.prerequisites[0]}
+                          course.prerequisites.map((prerequisite) => (
+                            <span key={prerequisite} className="inline-flex items-center rounded-md bg-[#fff0b8] px-3 py-1 text-[0.72rem] font-extrabold tracking-[0.1em] text-[#0f2147] shadow-[0_4px_10px_rgba(15,33,71,0.04)]">
+                              {prerequisite}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="inline-flex items-center rounded-md bg-[#f4f7fb] px-3 py-1 text-[0.72rem] font-extrabold tracking-[0.1em] text-[#93a3c4]">
+                            NONE
                           </span>
+                        )}
+
+                        <span className="ml-2 text-[0.7rem] font-bold uppercase tracking-[0.24em] text-[#8d97b3]">Coreq:</span>
+                        {Array.isArray(course.corequisites) && course.corequisites.length > 0 ? (
+                          course.corequisites.map((corequisite) => (
+                            <span key={corequisite} className="inline-flex items-center rounded-md bg-[#e8f3ff] px-3 py-1 text-[0.72rem] font-extrabold tracking-[0.1em] text-[#0f2147] shadow-[0_4px_10px_rgba(15,33,71,0.04)]">
+                              {corequisite}
+                            </span>
+                          ))
                         ) : (
                           <span className="inline-flex items-center rounded-md bg-[#f4f7fb] px-3 py-1 text-[0.72rem] font-extrabold tracking-[0.1em] text-[#93a3c4]">
                             NONE

@@ -13,6 +13,7 @@ export async function getCatalog(semester?: string, status?: string, page: numbe
       include: {
         pricing: true,
         instructorAssignments: { include: { instructor: true } },
+        prerequisites: { include: { required_course: true } },
       },
       skip,
       take: limit,
@@ -34,6 +35,12 @@ export async function getCatalog(semester?: string, status?: string, page: numbe
     is_elective: course.classification === "Elective",
     semester: course.semester,
     status: course.status.toLowerCase(),
+    prerequisites: course.prerequisites
+      .filter((p) => p.requirement_type === "prerequisite")
+      .map((p) => p.required_course.course_code),
+    corequisites: course.prerequisites
+      .filter((p) => p.requirement_type === "corequisite")
+      .map((p) => p.required_course.course_code),
   }));
 
   return { semester: semester || "all", total, page, limit, courses: formatted };

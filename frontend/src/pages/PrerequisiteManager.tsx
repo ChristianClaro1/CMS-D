@@ -1,18 +1,29 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { api } from '@/utils/api'
 import NavTab from '@/components/NavTab'
 import Portal from '@/components/Portal'
 import { useRole } from '@/contexts/RoleContext'
 import { useNavigate } from 'react-router-dom'
 
-const mockPrereqs = [
-  { id: 'PR-001', course: 'GFDD: vvsd', prerequisite: 'MATH105', type: 'Hard' },
-  { id: 'PR-002', course: 'MATH105: Calculus I', prerequisite: 'CS101', type: 'Hard' },
-  { id: 'PR-003', course: 'CS101: Intro to Programming', prerequisite: 'No prerequisites defined', type: 'Soft' },
-]
+type CourseRecord = {
+  course_id: string
+  course_code: string
+  course_name: string
+  status: string
+}
+
+type DependencyResponse = {
+  course_id: string
+  course_code: string
+  prerequisites: Array<{ course_code: string; course_name: string; type: string }>
+  corequisites: Array<{ course_code: string; course_name: string; type: string }>
+}
 
 export function PrerequisiteManager() {
   const { role } = useRole()
   const navigate = useNavigate()
+  const [courses, setCourses] = useState<CourseRecord[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (role === 'Department Chair') {
@@ -25,16 +36,85 @@ export function PrerequisiteManager() {
   }, [role, navigate])
 
   const [showModal, setShowModal] = useState(false)
-  const [selectedPrereq, setSelectedPrereq] = useState<{ id: string; course: string; prerequisite: string } | null>(null)
+  const [selectedCourse, setSelectedCourse] = useState<CourseRecord | null>(null)
+  const [selectedPrereqCodes, setSelectedPrereqCodes] = useState<string[]>([])
+  const [selectedCoreqCodes, setSelectedCoreqCodes] = useState<string[]>([])
+  const [isSaving, setIsSaving] = useState(false)
 
-  function openConfig(p: { id: string; course: string; prerequisite: string }) {
-    setSelectedPrereq(p)
+  const loadCourses = async () => {
+    setLoading(true)
+    try {
+      const response = await api.get('/courses', { limit: 100 })
+      setCourses((response?.courses ?? []).map((course: any) => ({
+        course_id: course.course_id,
+        course_code: course.course_code,
+        course_name: course.course_name,
+        status: course.status,
+      })))
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to load prerequisite courses', error)
+      setCourses([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadCourses()
+  }, [])
+
+  const activeCourses = useMemo(
+    () => courses.filter((course) => (course.status || 'active').toString().toLowerCase() === 'active'),
+    [courses],
+  )
+
+  async function openConfig(course: CourseRecord) {
+    setSelectedCourse(course)
     setShowModal(true)
+
+    try {
+      const response = await api.get(`/courses/${course.course_id}/prerequisites`)
+      const payload = response as DependencyResponse | undefined
+      setSelectedPrereqCodes(payload?.prerequisites?.map((item) => item.course_code) ?? [])
+      setSelectedCoreqCodes(payload?.corequisites?.map((item) => item.course_code) ?? [])
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to load prerequisite configuration', error)
+      setSelectedPrereqCodes([])
+      setSelectedCoreqCodes([])
+    }
   }
 
   function closeConfig() {
     setShowModal(false)
-    setSelectedPrereq(null)
+    setSelectedCourse(null)
+    setSelectedPrereqCodes([])
+    setSelectedCoreqCodes([])
+  }
+
+  function toggleValue(values: string[], value: string) {
+    return values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
+  }
+
+  async function saveConfig() {
+    if (!selectedCourse) return
+
+    setIsSaving(true)
+    try {
+      await api.put(`/courses/${selectedCourse.course_id}/prerequisites`, {
+        prerequisites: selectedPrereqCodes,
+        corequisites: selectedCoreqCodes,
+      })
+      await loadCourses()
+      closeConfig()
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to save prerequisite configuration', error)
+      alert('Failed to save prerequisite configuration')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -63,55 +143,91 @@ export function PrerequisiteManager() {
             </div>
 
             <div className="space-y-5">
-              {mockPrereqs.map((p) => (
+              {loading ? (
+                <div className="rounded-[1.35rem] border border-[#dce6f4] bg-[#f7fbff] px-5 py-6 text-sm text-[#66789c] shadow-[0_8px_20px_rgba(15,33,71,0.03)] sm:px-6 sm:py-7">
+                  Loading courses...
+                </div>
+              ) : activeCourses.length === 0 ? (
+                <div className="rounded-[1.35rem] border border-[#dce6f4] bg-[#f7fbff] px-5 py-6 text-sm text-[#66789c] shadow-[0_8px_20px_rgba(15,33,71,0.03)] sm:px-6 sm:py-7">
+                  No active courses found.
+                </div>
+              ) : (
+                activeCourses.map((course) => (
                 <div
-                  key={p.id}
+                  key={course.course_id}
                   className="flex items-center justify-between gap-6 rounded-[1.35rem] border border-[#dce6f4] bg-[#f7fbff] px-5 py-6 shadow-[0_8px_20px_rgba(15,33,71,0.03)] sm:px-6 sm:py-7"
                 >
                   <div className="min-w-0">
-                    <h3 className="text-[1.05rem] font-extrabold text-[#192544] sm:text-[1.1rem]">{p.course}</h3>
+                    <h3 className="text-[1.05rem] font-extrabold text-[#192544] sm:text-[1.1rem]">{course.course_code} - {course.course_name}</h3>
                     <p className="mt-2 text-[0.78rem] font-medium uppercase tracking-[0.14em] text-[#9aa8c0]">
-                      {p.id} • {p.type} dependency
+                      {course.course_id} • prerequisite dependency
                     </p>
                     <div className="mt-3">
                       <span className="inline-flex items-center rounded-md border border-[#e4ebf7] bg-white px-2.5 py-1 text-[0.7rem] font-bold text-[#1b4dff] shadow-[0_4px_10px_rgba(15,33,71,0.03)]">
-                        {p.prerequisite}
+                        Manage prerequisites
                       </span>
                     </div>
                   </div>
 
                   <div className="shrink-0">
                     <button
-                      onClick={() => openConfig(p)}
+                      onClick={() => void openConfig(course)}
                       className="rounded-2xl border border-[#dce3f1] bg-white px-6 py-3 text-sm font-semibold text-[#324160] shadow-[0_8px_18px_rgba(15,33,71,0.04)] transition-colors hover:border-[#c4d0e6] hover:text-[#0f2147]"
                     >
                       Configure Dependencies
                     </button>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {showModal && selectedPrereq && (
+      {showModal && selectedCourse && (
         <Portal>
           <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-6 sm:items-center sm:px-6">
             <div className="mx-auto max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ring-1 ring-gray-100 sm:p-8">
               <div className="text-left">
-                <h2 className="text-2xl font-bold text-[#0f2147]">Prerequisite Manager: {selectedPrereq.course}</h2>
+                <h2 className="text-2xl font-bold text-[#0f2147]">Prerequisite Manager: {selectedCourse.course_code} - {selectedCourse.course_name}</h2>
                 <p className="mt-2 text-sm text-gray-500">
-                  Select courses that must be completed before enrolling in {selectedPrereq.course}.
+                  Select courses that must be completed before enrolling in {selectedCourse.course_code} - {selectedCourse.course_name}.
                 </p>
               </div>
 
-              <div className="mt-6 rounded-xl bg-[#f7fbff] p-6">
-                <div className="rounded-lg border border-[#e6eef6] bg-white p-6">
-                  <div className="inline-block">
-                    <span className="inline-flex items-center rounded-lg bg-[#0f2147] px-4 py-2 text-sm font-bold text-yellow-300">
-                      {selectedPrereq.prerequisite}
-                    </span>
+              <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-xl bg-[#f7fbff] p-6">
+                  <div className="mb-4 text-xs font-extrabold uppercase tracking-[0.2em] text-[#8d97b3]">Prerequisites</div>
+                  <div className="space-y-3">
+                    {activeCourses.filter((course) => course.course_id !== selectedCourse.course_id).map((course) => (
+                      <label key={course.course_id} className="flex items-center gap-3 rounded-lg border border-[#e6eef6] bg-white p-3 text-sm text-[#0f2147]">
+                        <input
+                          type="checkbox"
+                          checked={selectedPrereqCodes.includes(course.course_code)}
+                          onChange={() => setSelectedPrereqCodes((current) => toggleValue(current, course.course_code))}
+                        />
+                        <span className="font-semibold">{course.course_code}</span>
+                        <span className="text-gray-400">{course.course_name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-[#f7fbff] p-6">
+                  <div className="mb-4 text-xs font-extrabold uppercase tracking-[0.2em] text-[#8d97b3]">Co-requisites</div>
+                  <div className="space-y-3">
+                    {activeCourses.filter((course) => course.course_id !== selectedCourse.course_id).map((course) => (
+                      <label key={course.course_id} className="flex items-center gap-3 rounded-lg border border-[#e6eef6] bg-white p-3 text-sm text-[#0f2147]">
+                        <input
+                          type="checkbox"
+                          checked={selectedCoreqCodes.includes(course.course_code)}
+                          onChange={() => setSelectedCoreqCodes((current) => toggleValue(current, course.course_code))}
+                        />
+                        <span className="font-semibold">{course.course_code}</span>
+                        <span className="text-gray-400">{course.course_name}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -120,8 +236,8 @@ export function PrerequisiteManager() {
                 <button onClick={closeConfig} className="text-sm font-semibold tracking-widest text-gray-400">
                   Cancel
                 </button>
-                <button onClick={closeConfig} className="rounded-xl bg-[#0f2147] px-6 py-3 text-yellow-400 shadow-md">
-                  Save Changes
+                <button onClick={() => void saveConfig()} disabled={isSaving} className="rounded-xl bg-[#0f2147] px-6 py-3 text-yellow-400 shadow-md disabled:opacity-60">
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>

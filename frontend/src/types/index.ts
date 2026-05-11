@@ -24,6 +24,7 @@ export interface Course {
   room_requirement?: string;
   price: number | null;
   prerequisites?: string[];
+  corequisites?: string[];
   is_elective?: boolean;
   created_at?: string;
   updated_at?: string;

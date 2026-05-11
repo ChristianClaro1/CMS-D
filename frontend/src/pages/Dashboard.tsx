@@ -1,4 +1,5 @@
  
+import { useEffect, useState } from 'react'
 import {
   BookOpen,
   Users,
@@ -15,11 +16,11 @@ import DashboardCard from '../components/dashboard/DashboardCard'
 import { useRole } from '@/contexts/RoleContext'
 import { useAuth } from '@/hooks/useAuth'
 import { Link } from 'react-router-dom'
+import { api } from '@/utils/api'
 
-const topStats = [
+const staticStats = [
   { name: 'Academic Catalog', value: 3, icon: BookMarked },
   { name: 'Faculty Hub', value: 3 },
-  { name: 'Under Review', value: 0, icon: ArrowUpRight },
 ]
 
 const modules = [
@@ -34,6 +35,7 @@ const modules = [
 export function Dashboard() {
   const { role } = useRole()
   const { user } = useAuth()
+  const [underReviewCount, setUnderReviewCount] = useState(0)
   const parts = user?.name?.split(' ') || [];
   const displayName = parts[parts.length - 1];
   const roleLabel = role.toUpperCase()
@@ -45,6 +47,31 @@ export function Dashboard() {
         : role === 'Department Chair'
           ? 'FACULTY WORKLOAD & INSTRUCTION ASSIGNMENT'
           : 'ACADEMIC PROGRAM AND CURRICULUM DEVELOPMENT PORTAL'
+
+  useEffect(() => {
+    let alive = true
+
+    const loadUnderReviewCount = async () => {
+      try {
+        const response = await api.get('/courses', { status: 'draft', limit: 100 })
+        if (alive) {
+          setUnderReviewCount(response?.total ?? response?.courses?.length ?? 0)
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load under review count', error)
+        if (alive) {
+          setUnderReviewCount(0)
+        }
+      }
+    }
+
+    void loadUnderReviewCount()
+
+    return () => {
+      alive = false
+    }
+  }, [])
 
   // Filter modules based on role
   const visibleModules = (() => {
@@ -65,6 +92,11 @@ export function Dashboard() {
 
     return modules
   })()
+
+  const topStats = [
+    ...staticStats,
+    { name: 'Under Review', value: underReviewCount, icon: ArrowUpRight },
+  ]
 
   return (
     <div className="space-y-6 pb-6">

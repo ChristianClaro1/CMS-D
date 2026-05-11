@@ -25,7 +25,7 @@ export type UserRole =
   | "ServiceAccount";
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  CurriculumCommittee: ["POST /api/v1/courses", "GET /api/v1/courses", "GET /api/v1/courses/*"],
+  CurriculumCommittee: ["POST /api/v1/courses", "PUT /api/v1/courses/*/prerequisites", "GET /api/v1/courses", "GET /api/v1/courses/*"],
   DepartmentChair: ["PATCH /api/v1/courses/*/instructor", "PATCH /api/v1/courses/*/instructor/*", "DELETE /api/v1/courses/*/instructor/*", "PATCH /api/v1/courses/*/sections", "GET /api/v1/courses", "GET /api/v1/courses/*"],
   Registrar: ["PATCH /api/v1/courses/*/status", "PATCH /api/v1/courses/*/sections", "GET /api/v1/courses", "GET /api/v1/courses/*"],
   Admin: ["*"],

@@ -12,13 +12,13 @@ import instructorDirectoryRoutes from "../api/v1/routes/instructorDirectoryRoute
 const router = Router();
 
 router.use("/auth", authRoutes);
+router.use("/courses", catalogRoutes);
 router.use("/courses", courseRoutes);
 router.use("/courses", instructorRoutes);
 router.use("/courses", sectionRoutes);
 router.use("/courses", prerequisiteRoutes);
 router.use("/courses", pricingRoutes);
 router.use("/courses", availabilityRoutes);
-router.use("/courses", catalogRoutes);
 router.use("/instructors", instructorDirectoryRoutes);
 
 export default router;
