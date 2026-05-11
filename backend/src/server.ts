@@ -7,14 +7,37 @@ import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const allowedOrigins = [
+  process.env.CORS_ORIGIN,
+  "https://cms-8drq22utm-christian-claros-projects.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:4173",
+]
+  .filter((origin): origin is string => Boolean(origin))
+  .map((origin) => origin.replace(/\/$/, ""));
 
 
 app.use(helmet());
 app.use(cors({
-  origin: [/\.vercel\.app$/, "http://localhost:3000", "http://localhost:5173", ""],
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    callback(null, allowedOrigins.includes(normalizedOrigin));
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: "1mb" }));
+
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Health check
 app.get("/health", (req, res) => {

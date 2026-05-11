@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const response = (await api.post('/auth/login', { email, password })) as BackendLoginResponse
+      const response = (await api.post('/login', { email, password })) as BackendLoginResponse
       if (!response?.access_token || !response.user) {
         return { success: false, error: 'Login failed' }
       }
