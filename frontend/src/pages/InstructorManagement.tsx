@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '@/utils/api'
 import Portal from '@/components/Portal'
-import type { Course } from '@/types'
 import { useRole } from '@/contexts/RoleContext'
 
 type InstructorRecord = {
@@ -26,13 +25,23 @@ type InstructorForm = {
   dept: string
 }
 
-type AssignmentForm = {
+type ActiveSectionRecord = {
+  section_id: string
   course_id: string
+  course_code: string
+  course_name: string
+  section: string
+  semester: string
+  status: string
+}
+
+type AssignmentForm = {
+  section_id: string
   section: string
 }
 
 const defaultInstructorForm: InstructorForm = { name: '', email: '', dept: '' }
-const defaultAssignmentForm: AssignmentForm = { course_id: '', section: 'A' }
+const defaultAssignmentForm: AssignmentForm = { section_id: '', section: 'A' }
 
 function normalizeStatus(status?: string) {
   return (status || 'active').toString().toLowerCase()
@@ -51,7 +60,7 @@ export function InstructorManagement() {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [instructors, setInstructors] = useState<InstructorRecord[]>([])
-  const [courses, setCourses] = useState<Course[]>([])
+  const [sections, setSections] = useState<ActiveSectionRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -81,7 +90,7 @@ export function InstructorManagement() {
     setActiveMenuId(null)
     setAssignmentTarget(instructor)
     setEditingAssignment(assignment ?? null)
-    setAssignmentForm(assignment ? { course_id: assignment.course_id, section: assignment.section } : defaultAssignmentForm)
+    setAssignmentForm(assignment ? { section_id: '', section: assignment.section } : defaultAssignmentForm)
     setShowAssignModal(true)
   }
 
@@ -166,8 +175,8 @@ export function InstructorManagement() {
     e.preventDefault()
     if (!assignmentTarget) return
 
-    if (!editingAssignment && !assignmentForm.course_id) {
-      alert('Please choose an active course.')
+    if (!editingAssignment && !assignmentForm.section_id) {
+      alert('Please choose an active section.')
       return
     }
 
@@ -178,9 +187,15 @@ export function InstructorManagement() {
           section: assignmentForm.section,
         })
       } else {
-        await api.patch(`/courses/${assignmentForm.course_id}/instructor`, {
+        const selectedSection = sections.find((section) => section.section_id === assignmentForm.section_id)
+
+        if (!selectedSection) {
+          throw new Error('Selected active section was not found.')
+        }
+
+        await api.patch(`/courses/${selectedSection.course_id}/instructor`, {
           instructor_id: assignmentTarget.instructor_id,
-          section: assignmentForm.section,
+          section: selectedSection.section,
         })
       }
       await loadInstructors(searchTerm)
@@ -208,19 +223,19 @@ export function InstructorManagement() {
     }
   }
 
-  async function loadCourses() {
+  async function loadSections() {
     try {
-      const response = await api.get('/courses', { limit: 100 })
-      setCourses(response?.courses ?? [])
+      const response = await api.get('/courses/sections')
+      setSections(response?.sections ?? [])
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Failed to load courses', error)
-      setCourses([])
+      console.error('Failed to load active sections', error)
+      setSections([])
     }
   }
 
   useEffect(() => {
-    void loadCourses()
+    void loadSections()
     void loadInstructors()
   }, [])
 
@@ -242,9 +257,9 @@ export function InstructorManagement() {
     [instructors],
   )
 
-  const activeCourses = useMemo(
-    () => courses.filter((course) => normalizeStatus(course.status) === 'active'),
-    [courses],
+  const activeSections = useMemo(
+    () => sections.filter((section) => normalizeStatus(section.status) === 'active'),
+    [sections],
   )
 
   return (
@@ -335,7 +350,7 @@ export function InstructorManagement() {
                             <div>
                               <div className="text-[0.68rem] font-extrabold uppercase tracking-[0.22em] text-[#8d97b3]">Assigned Sections</div>
                               <div className="mt-1 text-sm font-semibold text-[#0f2147]">
-                                {ins.assignment_count > 0 ? `${ins.assignment_count} active assignment${ins.assignment_count === 1 ? '' : 's'}` : 'No active course sections assigned'}
+                                {ins.assignment_count > 0 ? `${ins.assignment_count} active assignment${ins.assignment_count === 1 ? '' : 's'}` : 'No active sections assigned'}
                               </div>
                             </div>
                             {canManageInstructors && (
@@ -344,7 +359,7 @@ export function InstructorManagement() {
                                 onClick={() => openAssign(ins)}
                                 className="rounded-full border border-[#dce3f1] bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.2em] text-[#0f2147] shadow-[0_8px_18px_rgba(15,33,71,0.04)]"
                               >
-                                Assign Section
+                                Assign Instructor
                               </button>
                             )}
                           </div>
@@ -481,7 +496,7 @@ export function InstructorManagement() {
                   <p className="mt-2 text-sm text-gray-500">
                     {editingAssignment
                       ? `Update section ${editingAssignment.section} for ${editingAssignment.course_code} - ${editingAssignment.course_name}.`
-                      : `Assign ${assignmentTarget.instructor_name} to an active course section.`}
+                      : `Assign ${assignmentTarget.instructor_name} to an active section.`}
                   </p>
                 </div>
                 <button onClick={closeAssign} className="text-gray-400 text-xl leading-none">×</button>
@@ -502,21 +517,21 @@ export function InstructorManagement() {
               <form onSubmit={submitAssign} className="mt-6 space-y-5">
                 {!editingAssignment && (
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-2">Course</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">Active Section</label>
                     <select
                       required
-                      value={assignmentForm.course_id}
-                      onChange={(e) => setAssignmentForm({ ...assignmentForm, course_id: e.target.value })}
+                      value={assignmentForm.section_id}
+                      onChange={(e) => setAssignmentForm({ ...assignmentForm, section_id: e.target.value })}
                       className="w-full px-4 py-3 rounded-lg border border-gray-100 bg-slate-50 text-sm"
                     >
-                      <option value="">Select an active course</option>
-                      {activeCourses.map((course) => (
-                        <option key={course.course_id} value={course.course_id}>
-                          {course.course_code} - {course.course_name}
+                      <option value="">Select an active section</option>
+                      {activeSections.map((section) => (
+                        <option key={section.section_id} value={section.section_id}>
+                          {section.course_code} - {section.course_name} • Section {section.section} • {section.semester}
                         </option>
                       ))}
                     </select>
-                    <p className="mt-2 text-xs text-gray-500">Only active courses are available here.</p>
+                    <p className="mt-2 text-xs text-gray-500">Only active sections are available here.</p>
                   </div>
                 )}
 

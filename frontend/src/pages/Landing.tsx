@@ -14,13 +14,13 @@ export function Landing() {
       <main className="relative mx-auto flex min-h-screen w-full max-w-[1400px] items-center justify-center px-6 py-14 sm:px-10 lg:px-16">
         <section className="flex w-full max-w-4xl flex-col items-center text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.5em] text-white/65 sm:text-base">
-            Welcome to the
+            Welcome to the 
           </p>
 
           <h1 className="mt-4 max-w-5xl text-[clamp(2.8rem,8vw,5.4rem)] font-black italic leading-[0.9] tracking-[-0.05em] text-[#ffd233] drop-shadow-[0_8px_24px_rgba(0,0,0,0.22)] sm:leading-[0.86]">
-            COURSE MANAGEMENT
-            <br />
-            SYSTEM
+            COURSE MANAGEMENT SYSTEM
+       
+            
           </h1>
 
           <p className="mx-auto mt-8 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
