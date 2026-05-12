@@ -1,5 +1,19 @@
 import { prisma } from "../utils/db";
 
+function normalizeDependencyCodes(codes?: string[]) {
+  return [...new Set(codes ?? [])];
+}
+
+function normalizeDependencyPayload(prerequisites?: string[], corequisites?: string[]) {
+  const uniquePrerequisites = normalizeDependencyCodes(prerequisites);
+  const uniqueCorequisites = normalizeDependencyCodes(corequisites).filter((code) => !uniquePrerequisites.includes(code));
+
+  return {
+    prerequisites: uniquePrerequisites,
+    corequisites: uniqueCorequisites,
+  };
+}
+
 export async function getPrerequisites(courseId: string) {
   const course = await prisma.course.findUnique({
     where: { course_id: courseId },
@@ -10,21 +24,27 @@ export async function getPrerequisites(courseId: string) {
 
   if (!course) return null;
 
-  const prerequisites = course.prerequisites
-    .filter((p) => p.requirement_type === "prerequisite")
-    .map((p) => ({
-      course_code: p.required_course.course_code,
-      course_name: p.required_course.course_name,
-      type: "prerequisite",
-    }));
+  const prerequisiteMap = new Map<string, { course_code: string; course_name: string; type: string }>();
+  const corequisiteMap = new Map<string, { course_code: string; course_name: string; type: string }>();
 
-  const corequisites = course.prerequisites
-    .filter((p) => p.requirement_type === "corequisite")
-    .map((p) => ({
-      course_code: p.required_course.course_code,
-      course_name: p.required_course.course_name,
-      type: "corequisite",
-    }));
+  for (const prerequisite of course.prerequisites) {
+    const item = {
+      course_code: prerequisite.required_course.course_code,
+      course_name: prerequisite.required_course.course_name,
+      type: prerequisite.requirement_type,
+    };
+
+    if (prerequisite.requirement_type === "prerequisite") {
+      prerequisiteMap.set(item.course_code, item);
+    }
+
+    if (prerequisite.requirement_type === "corequisite") {
+      corequisiteMap.set(item.course_code, item);
+    }
+  }
+
+  const prerequisites = [...prerequisiteMap.values()];
+  const corequisites = [...corequisiteMap.values()];
 
   return { course, prerequisites, corequisites };
 }
@@ -33,20 +53,22 @@ export async function updatePrerequisites(courseId: string, data: any) {
   const course = await prisma.course.findUnique({ where: { course_id: courseId } });
   if (!course) return null;
 
-  if (data.prerequisites?.includes(course.course_code)) {
+  const normalized = normalizeDependencyPayload(data.prerequisites, data.corequisites);
+
+  if (normalized.prerequisites.includes(course.course_code)) {
     throw new Error(`${course.course_code} cannot be its own prerequisite.`);
   }
 
   await prisma.$transaction(async (tx) => {
     await tx.prerequisite.deleteMany({ where: { course_id: courseId } });
 
-    if (data.prerequisites?.length) {
+    if (normalized.prerequisites.length) {
       const prereqCourses = await tx.course.findMany({
-        where: { course_code: { in: data.prerequisites } },
+        where: { course_code: { in: normalized.prerequisites } },
         select: { course_id: true, course_code: true },
       });
       const prereqMap = new Map(prereqCourses.map((c) => [c.course_code, c.course_id]));
-      for (const code of data.prerequisites) {
+      for (const code of normalized.prerequisites) {
         const reqId = prereqMap.get(code);
         if (reqId) {
           await tx.prerequisite.create({
@@ -56,13 +78,13 @@ export async function updatePrerequisites(courseId: string, data: any) {
       }
     }
 
-    if (data.corequisites?.length) {
+    if (normalized.corequisites.length) {
       const coreqCourses = await tx.course.findMany({
-        where: { course_code: { in: data.corequisites } },
+        where: { course_code: { in: normalized.corequisites } },
         select: { course_id: true, course_code: true },
       });
       const coreqMap = new Map(coreqCourses.map((c) => [c.course_code, c.course_id]));
-      for (const code of data.corequisites) {
+      for (const code of normalized.corequisites) {
         const reqId = coreqMap.get(code);
         if (reqId) {
           await tx.prerequisite.create({

@@ -76,8 +76,13 @@ export function PrerequisiteManager() {
     try {
       const response = await api.get(`/courses/${course.course_id}/prerequisites`)
       const payload = response as DependencyResponse | undefined
-      setSelectedPrereqCodes(payload?.prerequisites?.map((item) => item.course_code) ?? [])
-      setSelectedCoreqCodes(payload?.corequisites?.map((item) => item.course_code) ?? [])
+      const prerequisiteCodes = uniqueValues(payload?.prerequisites?.map((item) => item.course_code) ?? [])
+      const corequisiteCodes = uniqueValues(payload?.corequisites?.map((item) => item.course_code) ?? []).filter(
+        (code) => !prerequisiteCodes.includes(code),
+      )
+
+      setSelectedPrereqCodes(prerequisiteCodes)
+      setSelectedCoreqCodes(corequisiteCodes)
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to load prerequisite configuration', error)
@@ -97,14 +102,45 @@ export function PrerequisiteManager() {
     return values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
   }
 
+  function uniqueValues(values: string[]) {
+    return [...new Set(values)]
+  }
+
+  function togglePrerequisite(courseCode: string) {
+    setSelectedPrereqCodes((current) => {
+      const isAdding = !current.includes(courseCode)
+
+      if (isAdding) {
+        setSelectedCoreqCodes((other) => other.filter((code) => code !== courseCode))
+      }
+
+      return toggleValue(current, courseCode)
+    })
+  }
+
+  function toggleCorequisite(courseCode: string) {
+    setSelectedCoreqCodes((current) => {
+      const isAdding = !current.includes(courseCode)
+
+      if (isAdding) {
+        setSelectedPrereqCodes((other) => other.filter((code) => code !== courseCode))
+      }
+
+      return toggleValue(current, courseCode)
+    })
+  }
+
   async function saveConfig() {
     if (!selectedCourse) return
 
     setIsSaving(true)
     try {
+      const prerequisites = uniqueValues(selectedPrereqCodes)
+      const corequisites = uniqueValues(selectedCoreqCodes).filter((code) => !prerequisites.includes(code))
+
       await api.put(`/courses/${selectedCourse.course_id}/prerequisites`, {
-        prerequisites: selectedPrereqCodes,
-        corequisites: selectedCoreqCodes,
+        prerequisites,
+        corequisites,
       })
       await loadCourses()
       closeConfig()
@@ -205,7 +241,7 @@ export function PrerequisiteManager() {
                         <input
                           type="checkbox"
                           checked={selectedPrereqCodes.includes(course.course_code)}
-                          onChange={() => setSelectedPrereqCodes((current) => toggleValue(current, course.course_code))}
+                          onChange={() => togglePrerequisite(course.course_code)}
                         />
                         <span className="font-semibold">{course.course_code}</span>
                         <span className="text-gray-400">{course.course_name}</span>
@@ -222,7 +258,7 @@ export function PrerequisiteManager() {
                         <input
                           type="checkbox"
                           checked={selectedCoreqCodes.includes(course.course_code)}
-                          onChange={() => setSelectedCoreqCodes((current) => toggleValue(current, course.course_code))}
+                          onChange={() => toggleCorequisite(course.course_code)}
                         />
                         <span className="font-semibold">{course.course_code}</span>
                         <span className="text-gray-400">{course.course_name}</span>
