@@ -6,11 +6,11 @@ create table if not exists public.sections (
   enrolled_count integer not null default 0,
   room text,
   schedule text,
-  semester text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (course_id, section, semester)
+  unique (course_id, section)
 );
 
+alter table public.sections add column if not exists semester text;
+
 create index if not exists sections_course_id_idx on public.sections(course_id);
-create index if not exists sections_semester_idx on public.sections(semester);

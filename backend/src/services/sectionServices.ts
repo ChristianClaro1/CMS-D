@@ -18,7 +18,7 @@ async function hydrateSection(section: any) {
     where: {
       course_id: section.course_id,
       section: section.section,
-      semester: section.semester,
+      semester: section.course.semester,
     },
     include: { instructor: true },
   });
@@ -28,12 +28,12 @@ async function hydrateSection(section: any) {
     course_id: section.course_id,
     course_code: section.course.course_code,
     course_name: section.course.course_name,
-    semester: section.semester,
+    semester: section.course.semester,
     status: section.course.status,
     section: section.section,
-    section_capacity: section.section_capacity,
+    section_capacity: section.course.section_capacity,
     enrolled_count: section.enrolled_count,
-    available_slots: Math.max(section.section_capacity - section.enrolled_count, 0),
+    available_slots: Math.max(section.course.section_capacity - section.enrolled_count, 0),
     room_requirement: section.room ?? section.course.room_requirement ?? null,
     room: section.room ?? null,
     schedule: section.schedule ?? null,
@@ -45,7 +45,7 @@ export async function listSections(courseId?: string) {
   const sections = await prisma.section.findMany({
     where: courseId ? { course_id: courseId } : undefined,
     include: { course: true },
-    orderBy: [{ semester: "desc" }, { section: "asc" }],
+    orderBy: [{ section: "asc" }],
   });
 
   const hydrated = await Promise.all(sections.map((section) => hydrateSection(section)));
@@ -57,13 +57,10 @@ export async function createSection(courseId: string, data: SectionInput) {
   if (!course) return null;
 
   const section = normalizeSection(data.section);
-  const existing = await prisma.section.findUnique({
+  const existing = await prisma.section.findFirst({
     where: {
-      course_id_section_semester: {
-        course_id: courseId,
-        section,
-        semester: course.semester,
-      },
+      course_id: courseId,
+      section,
     },
   });
 
@@ -75,11 +72,10 @@ export async function createSection(courseId: string, data: SectionInput) {
     data: {
       course_id: courseId,
       section,
-      section_capacity: data.section_capacity,
+      section_capacity: course.section_capacity,
       enrolled_count: 0,
       room: data.room || null,
       schedule: data.schedule || null,
-      semester: course.semester,
     },
     include: { course: true },
   });
@@ -105,7 +101,6 @@ export async function updateSection(courseId: string, sectionId: string, data: S
     where: {
       course_id: courseId,
       section: nextSection,
-      semester: section.semester,
       section_id: { not: sectionId },
     },
   });
@@ -119,7 +114,7 @@ export async function updateSection(courseId: string, sectionId: string, data: S
       where: { section_id: sectionId },
       data: {
         section: nextSection,
-        section_capacity: data.section_capacity,
+        section_capacity: section.course.section_capacity,
         room: data.room || null,
         schedule: data.schedule || null,
       },
@@ -127,7 +122,7 @@ export async function updateSection(courseId: string, sectionId: string, data: S
     });
 
     await tx.instructorAssignment.updateMany({
-      where: { course_id: courseId, section: section.section, semester: section.semester },
+      where: { course_id: courseId, section: section.section, semester: section.course.semester },
       data: { section: nextSection, room: data.room || null, schedule: data.schedule || null },
     });
 
@@ -150,7 +145,7 @@ export async function deleteSection(courseId: string, sectionId: string) {
       where: {
         course_id: courseId,
         section: section.section,
-        semester: section.semester,
+        semester: section.course.semester,
       },
     });
 

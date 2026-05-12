@@ -109,11 +109,10 @@ model Section {
   enrolled_count   Int      @default(0)
   room             String?
   schedule         String?
-  semester         String
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  @@unique([course_id, section, semester])
+  @@unique([course_id, section])
   @@map("sections")
 }
 

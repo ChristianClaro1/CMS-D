@@ -100,6 +100,11 @@ export function EnrollmentHub() {
     [catalogCourses],
   )
 
+  const selectedCourse = useMemo(
+    () => activeCourses.find((course) => course.course_id === form.course_id) || null,
+    [activeCourses, form.course_id],
+  )
+
   const visibleSections = useMemo(
     () => sections.filter((section) => {
       if (normalizeStatus(section.status) !== 'active') {
@@ -190,7 +195,6 @@ export function EnrollmentHub() {
 
       const payload = {
         section: form.section.trim().toUpperCase(),
-        section_capacity: Number(form.section_capacity),
         room: form.room || undefined,
         schedule: form.schedule || undefined,
       }
@@ -391,14 +395,9 @@ export function EnrollmentHub() {
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-2">Capacity</label>
-                      <input
-                        required
-                        type="number"
-                        min="1"
-                        value={form.section_capacity}
-                        onChange={(e) => setForm({ ...form, section_capacity: Number(e.target.value) })}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-100 bg-slate-50 text-sm"
-                      />
+                      <div className="w-full rounded-lg border border-gray-100 bg-slate-100 px-4 py-3 text-sm text-[#0f2147]">
+                        {selectedCourse?.section_capacity ?? 'Select a course'}
+                      </div>
                     </div>
                   </div>
 
