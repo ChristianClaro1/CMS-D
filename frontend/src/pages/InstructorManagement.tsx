@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api } from '@/utils/api'
 import Portal from '@/components/Portal'
 import type { Course } from '@/types'
+import { useRole } from '@/contexts/RoleContext'
 
 type InstructorRecord = {
   instructor_id: string
@@ -38,6 +39,8 @@ function normalizeStatus(status?: string) {
 }
 
 export function InstructorManagement() {
+  const { role } = useRole()
+  const canManageInstructors = role === 'Admin' || role === 'Department Chair'
   const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [form, setForm] = useState<InstructorForm>(defaultInstructorForm)
@@ -296,9 +299,11 @@ export function InstructorManagement() {
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 text-sm bg-white"
               />
             </div>
-            <div>
-              <button onClick={openAdd} className="ml-4 px-4 py-2 rounded-full bg-[#0f2147] text-yellow-400 shadow">+ Add Instructor</button>
-            </div>
+            {canManageInstructors && (
+              <div>
+                <button onClick={openAdd} className="ml-4 px-4 py-2 rounded-full bg-[#0f2147] text-yellow-400 shadow">+ Add Instructor</button>
+              </div>
+            )}
           </div>
 
           <div className="divide-y divide-gray-100">
@@ -333,13 +338,15 @@ export function InstructorManagement() {
                                 {ins.assignment_count > 0 ? `${ins.assignment_count} active assignment${ins.assignment_count === 1 ? '' : 's'}` : 'No active course sections assigned'}
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => openAssign(ins)}
-                              className="rounded-full border border-[#dce3f1] bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.2em] text-[#0f2147] shadow-[0_8px_18px_rgba(15,33,71,0.04)]"
-                            >
-                              Assign Section
-                            </button>
+                            {canManageInstructors && (
+                              <button
+                                type="button"
+                                onClick={() => openAssign(ins)}
+                                className="rounded-full border border-[#dce3f1] bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.2em] text-[#0f2147] shadow-[0_8px_18px_rgba(15,33,71,0.04)]"
+                              >
+                                Assign Section
+                              </button>
+                            )}
                           </div>
 
                           <div className="mt-3 space-y-2">
@@ -356,20 +363,24 @@ export function InstructorManagement() {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => openAssign(ins, assignment)}
-                                        className="rounded-full border border-[#dce3f1] bg-[#f9fbff] px-3 py-1.5 text-[0.7rem] font-extrabold uppercase tracking-[0.18em] text-[#0f2147]"
-                                      >
-                                        Edit
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => void deleteAssignment(assignment.course_id, assignment.section)}
-                                        className="rounded-full border border-[#f2c1bb] bg-[#fff1f0] px-3 py-1.5 text-[0.7rem] font-extrabold uppercase tracking-[0.18em] text-[#b42318]"
-                                      >
-                                        Remove
-                                      </button>
+                                      {canManageInstructors && (
+                                        <button
+                                          type="button"
+                                          onClick={() => openAssign(ins, assignment)}
+                                          className="rounded-full border border-[#dce3f1] bg-[#f9fbff] px-3 py-1.5 text-[0.7rem] font-extrabold uppercase tracking-[0.18em] text-[#0f2147]"
+                                        >
+                                          Edit
+                                        </button>
+                                      )}
+                                      {canManageInstructors && (
+                                        <button
+                                          type="button"
+                                          onClick={() => void deleteAssignment(assignment.course_id, assignment.section)}
+                                          className="rounded-full border border-[#f2c1bb] bg-[#fff1f0] px-3 py-1.5 text-[0.7rem] font-extrabold uppercase tracking-[0.18em] text-[#b42318]"
+                                        >
+                                          Remove
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -396,15 +407,17 @@ export function InstructorManagement() {
                           <div className="text-sm font-semibold text-[#0f2147]">{ins.assignment_count}</div>
 
                           <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setActiveMenuId((current) => (current === ins.instructor_id ? null : ins.instructor_id))}
-                              className="rounded-lg bg-[#f6f8fc] px-3 py-2 text-[#0f2147] shadow-[inset_0_0_0_1px_rgba(15,33,71,0.03)]"
-                              aria-label={`Actions for ${ins.instructor_name}`}
-                            >
-                              •••
-                            </button>
-                            {activeMenuId === ins.instructor_id && (
+                            {canManageInstructors && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveMenuId((current) => (current === ins.instructor_id ? null : ins.instructor_id))}
+                                className="rounded-lg bg-[#f6f8fc] px-3 py-2 text-[#0f2147] shadow-[inset_0_0_0_1px_rgba(15,33,71,0.03)]"
+                                aria-label={`Actions for ${ins.instructor_name}`}
+                              >
+                                •••
+                              </button>
+                            )}
+                            {activeMenuId === ins.instructor_id && canManageInstructors && (
                               <div className="absolute right-0 top-full z-20 mt-2 w-44 overflow-hidden rounded-2xl border border-[#dce3f1] bg-white shadow-[0_18px_30px_rgba(15,33,71,0.12)]">
                                 <button type="button" onClick={() => { setActiveMenuId(null); openEdit(ins) }} className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#0f2147] hover:bg-[#f6f8fc]">Edit</button>
                                 <button type="button" onClick={() => { setActiveMenuId(null); void deleteInstructor(ins.instructor_id) }} className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#b42318] hover:bg-[#fff1f0]">Delete</button>
@@ -421,7 +434,7 @@ export function InstructorManagement() {
           </div>
         </div>
       </div>
-      {modalMode && (
+      {modalMode && canManageInstructors && (
         <Portal>
           <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-60 p-6 pt-20">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-auto p-6 sm:p-8 ring-1 ring-gray-100">
@@ -458,7 +471,7 @@ export function InstructorManagement() {
         </Portal>
       )}
 
-      {showAssignModal && assignmentTarget && (
+      {showAssignModal && assignmentTarget && canManageInstructors && (
         <Portal>
           <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-60 p-6 pt-20">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-auto p-6 sm:p-8 ring-1 ring-gray-100">

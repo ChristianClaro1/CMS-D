@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "../node_modules/@types/pg";
+import bcryptjs from "bcryptjs";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -23,7 +24,17 @@ async function main() {
   await prisma.prerequisite.deleteMany();
   await prisma.coursePricing.deleteMany();
   await prisma.course.deleteMany();
+  await prisma.authUser.deleteMany();
   await prisma.instructor.deleteMany();
+
+  await prisma.authUser.create({
+    data: {
+      full_name: "Dr. Maria Santos",
+      email: "maria.santos@university.edu",
+      password_hash: bcryptjs.hashSync("password123", 12),
+      role: "Admin",
+    },
+  });
 
   const ins1 = await prisma.instructor.create({
     data: { instructor_id: "INS-00042", instructor_name: "Dr. Maria Santos", email: "maria.santos@university.edu", department: "Computer Science" },

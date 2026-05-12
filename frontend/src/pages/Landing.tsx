@@ -1,120 +1,46 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from '@heroui/react'
-import toast from 'react-hot-toast'
-import { useAuth } from '@/hooks/useAuth'
+import { ArrowRight } from 'lucide-react'
 
 export function Landing() {
-  const [isEntering, setIsEntering] = useState(false)
-  const [email, setEmail] = useState('maria.santos@university.edu')
-  const [password, setPassword] = useState('password123')
   const navigate = useNavigate()
-  const { login } = useAuth()
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setIsEntering(true)
-
-    try {
-      const result = await login(email, password)
-      if (!result.success) {
-        toast.error(result.error || 'Unable to enter the system')
-        return
-      }
-
-      navigate('/user-roles')
-    } catch (error) {
-      toast.error('Unable to enter the system')
-    } finally {
-      setIsEntering(false)
-    }
-  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#081a66] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,209,51,0.14),_transparent_40%),radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.08),_transparent_32%),linear-gradient(180deg,_#081a66_0%,_#07124b_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:80px_80px] opacity-10" />
-      <div className="absolute -left-24 top-20 h-64 w-64 rounded-full bg-[#ffd233]/12 blur-3xl" />
-      <div className="absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-white/8 blur-3xl" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,209,51,0.12),_transparent_36%),radial-gradient(circle_at_bottom,_rgba(255,255,255,0.08),_transparent_30%),linear-gradient(180deg,_#081a66_0%,_#07124b_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:90px_90px] opacity-10" />
+      <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-[#ffd233]/10 blur-3xl" />
+      <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-white/8 blur-3xl" />
 
-      <div className="relative flex min-h-screen items-center justify-center px-6 py-8">
-        <div className="grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/10 bg-white/8 shadow-[0_30px_90px_rgba(0,0,0,0.28)] backdrop-blur-xl lg:grid-cols-[1.15fr_0.95fr]">
-          <div className="relative hidden flex-col justify-between overflow-hidden bg-[linear-gradient(180deg,_rgba(8,26,102,0.92)_0%,_rgba(7,18,75,0.98)_100%)] p-10 lg:flex">
-            <div className="absolute -left-20 top-8 h-56 w-56 rounded-full bg-[#ffd233]/18 blur-3xl" />
-            <div className="absolute -bottom-16 right-4 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+      <main className="relative mx-auto flex min-h-screen w-full max-w-[1400px] items-center justify-center px-6 py-14 sm:px-10 lg:px-16">
+        <section className="flex w-full max-w-4xl flex-col items-center text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.5em] text-white/65 sm:text-base">
+            Welcome to the
+          </p>
 
-            <div className="relative space-y-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.45em] text-white/45">Welcome to the</p>
-              <h1 className="max-w-md text-[clamp(2.8rem,5vw,5rem)] font-black italic leading-[0.92] tracking-[-0.03em] text-[#ffd233] drop-shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
-                Course Management System
-              </h1>
-              <p className="max-w-lg text-base leading-7 text-white/65">
-                A centralized administrative portal for curriculum oversight and institutional operations.
-              </p>
-            </div>
+          <h1 className="mt-4 max-w-5xl text-[clamp(2.8rem,8vw,5.4rem)] font-black italic leading-[0.9] tracking-[-0.05em] text-[#ffd233] drop-shadow-[0_8px_24px_rgba(0,0,0,0.22)] sm:leading-[0.86]">
+            COURSE MANAGEMENT
+            <br />
+            SYSTEM
+          </h1>
 
-          </div>
+          <p className="mx-auto mt-8 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
+            A centralized administrative portal for curriculum oversight and institutional operations.
+          </p>
 
-          <div className="flex items-center justify-center bg-[#f7f9ff] px-6 py-10 sm:px-10 lg:px-12">
-            <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6 rounded-[1.75rem] border border-[#dce6f4] bg-white p-8 shadow-[0_18px_50px_rgba(8,26,102,0.12)]">
-              <div className="space-y-3 text-center">
-                <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#0f2147]/45 lg:hidden">Course Management System</p>
-                <h2 className="text-3xl font-black italic tracking-tight text-[#0f2147]">Sign in</h2>
-                <p className="text-sm leading-6 text-slate-500">
-                  Use your CMS credentials to access the system.
-                </p>
-              </div>
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="mt-12 inline-flex h-14 items-center justify-center gap-3 rounded-[1.25rem] bg-[#ffd233] px-9 text-sm font-black tracking-[0.3em] text-[#081a66] shadow-[0_18px_50px_rgba(255,210,51,0.22)] transition-transform duration-200 hover:scale-[1.03] sm:h-16"
+          >
+            ENTER SYSTEM
+            <ArrowRight className="h-5 w-5" />
+          </button>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-600" htmlFor="email">
-                    Email Address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    className="w-full rounded-2xl border border-[#dbe4f2] bg-[#f8fbff] px-4 py-3 text-sm text-[#0f2147] outline-none transition focus:border-[#0f2147] focus:bg-white"
-                    placeholder="you@university.edu"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-600" htmlFor="password">
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-2xl border border-[#dbe4f2] bg-[#f8fbff] px-4 py-3 text-sm text-[#0f2147] outline-none transition focus:border-[#0f2147] focus:bg-white"
-                    placeholder="Your password"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-[#e8eef8] bg-[#f7f9ff] px-4 py-3 text-sm text-slate-600">
-                Demo login: <span className="font-semibold text-[#0f2147]">maria.santos@university.edu</span> / <span className="font-semibold text-[#0f2147]">password123</span>
-              </div>
-
-              <Button
-                type="submit"
-                className="h-12 w-full rounded-2xl bg-[#0f2147] px-8 text-sm font-extrabold tracking-[0.2em] text-[#ffd233] shadow-[0_18px_50px_rgba(15,33,71,0.24)] transition-transform duration-200 hover:scale-[1.02] sm:h-14 sm:text-base"
-                isLoading={isEntering}
-              >
-                ENTER SYSTEM
-              </Button>
-            </form>
-          </div>
-        </div>
-
-      </div>
+          <p className="mt-20 text-[0.7rem] font-black uppercase tracking-[0.55em] text-white/25 sm:text-xs">
+            Course Management System
+          </p>
+        </section>
+      </main>
     </div>
   )
 }

@@ -109,6 +109,7 @@ export function CourseCatalog() {
   })
 
   const canManageCourses = role !== 'Registrar' && role !== 'Department Chair'
+  const canDeleteCourses = role === 'Admin' || role === 'Curriculum Committee'
 
   const openCreateModal = () => {
     setEditingCourseId(null)
@@ -353,7 +354,7 @@ export function CourseCatalog() {
                     </div>
 
                     <div className="relative flex shrink-0 items-start gap-3">
-                      {canManageCourses && (
+                      {(canManageCourses || canDeleteCourses) && (
                         <>
                           <button
                             type="button"
@@ -366,23 +367,27 @@ export function CourseCatalog() {
 
                           {activeMenuId === course.course_id && (
                             <div className="absolute right-0 top-12 z-10 w-40 overflow-hidden rounded-2xl border border-[#dce3f1] bg-white shadow-[0_18px_30px_rgba(15,33,71,0.12)]">
-                              <button
-                                type="button"
-                                onClick={() => openEditModal(course)}
-                                className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#0f2147] hover:bg-[#f6f8fc]"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuId(null)
-                                  void handleDelete(course.course_id)
-                                }}
-                                className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#b42318] hover:bg-[#fff1f0]"
-                              >
-                                Delete
-                              </button>
+                              {canManageCourses && (
+                                <button
+                                  type="button"
+                                  onClick={() => openEditModal(course)}
+                                  className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#0f2147] hover:bg-[#f6f8fc]"
+                                >
+                                  Edit
+                                </button>
+                              )}
+                              {canDeleteCourses && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null)
+                                    void handleDelete(course.course_id)
+                                  }}
+                                  className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#b42318] hover:bg-[#fff1f0]"
+                                >
+                                  Delete
+                                </button>
+                              )}
                             </div>
                           )}
                         </>

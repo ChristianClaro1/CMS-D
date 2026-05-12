@@ -13,6 +13,10 @@ export function getAuthToken() {
   return localStorage.getItem('auth_token')
 }
 
+function getAppRole() {
+  return localStorage.getItem('user_role')
+}
+
 export function setAuthToken(token: string) {
   localStorage.setItem('auth_token', token)
 }
@@ -39,6 +43,7 @@ async function request(method: string, path: string, body?: any, params?: Params
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(getAppRole() ? { 'x-user-role': getAppRole() as string } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   })

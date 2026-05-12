@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 
-type Role = 'Curriculum Committee' | 'Department Chair' | 'Registrar' | 'Admin'
+export type Role = 'Curriculum Committee' | 'Department Chair' | 'Registrar' | 'Admin'
 
 type RoleContextType = {
   role: Role
@@ -10,7 +10,16 @@ type RoleContextType = {
 const RoleContext = createContext<RoleContextType | undefined>(undefined)
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRole] = useState<Role>('Admin')
+  const [role, setRole] = useState<Role>(() => {
+    const storedRole = localStorage.getItem('user_role')
+    return storedRole === 'Curriculum Committee' || storedRole === 'Department Chair' || storedRole === 'Registrar' || storedRole === 'Admin'
+      ? storedRole
+      : 'Admin'
+  })
+
+  useEffect(() => {
+    localStorage.setItem('user_role', role)
+  }, [role])
 
   return <RoleContext.Provider value={{ role, setRole }}>{children}</RoleContext.Provider>
 }

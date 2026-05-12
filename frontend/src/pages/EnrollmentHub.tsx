@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Portal from '@/components/Portal'
 import { api } from '@/utils/api'
+import { useRole } from '@/contexts/RoleContext'
 import type { Course } from '@/types'
 
 type EnrollmentSection = {
@@ -36,13 +37,12 @@ const defaultSectionForm: SectionForm = {
   schedule: '',
 }
 
-const SECTION_STORAGE_KEY = 'enrollment_sections'
-
 function normalizeStatus(status?: string) {
   return (status || 'active').toString().toLowerCase()
 }
 
 export function EnrollmentHub() {
+  const { role } = useRole()
   const [activeTab, setActiveTab] = useState<'all' | 'full' | 'available'>('all')
   const [showCreate, setShowCreate] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit' | null>(null)
@@ -52,58 +52,40 @@ export function EnrollmentHub() {
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [form, setForm] = useState<SectionForm>(defaultSectionForm)
+  const canDeleteSections = role === 'Admin' || role === 'Department Chair' || role === 'Registrar'
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null)
 
   const loadCatalogCourses = async () => {
-    const response = await api.get('/courses', { limit: 100 })
-    setCatalogCourses(response?.courses ?? [])
+    try {
+      const response = await api.get('/courses', { limit: 100 })
+      setCatalogCourses(response?.courses ?? [])
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to load catalog courses', error)
+      setCatalogCourses([])
+    }
   }
 
-  const loadSections = () => {
-    const stored = window.localStorage.getItem(SECTION_STORAGE_KEY)
-    const parsed: EnrollmentSection[] = stored ? JSON.parse(stored) : []
-
-    const catalogById = new Map(catalogCourses.map((course) => [course.course_id, course]))
-    const hydrated = parsed
-      .map((section) => {
-        const course = catalogById.get(section.course_id)
-        if (!course || normalizeStatus(course.status) !== 'active') {
-          return null
-        }
-
-        const enrolledCount = Number(section.enrolled_count ?? 0)
-        const sectionCapacity = Number(section.section_capacity ?? course.section_capacity ?? 0)
-
-        return {
-          ...section,
-          course_code: course.course_code,
-          course_name: course.course_name,
-          semester: course.semester,
-          status: course.status,
-          section_capacity: sectionCapacity,
-          enrolled_count: enrolledCount,
-          available_slots: Math.max(sectionCapacity - enrolledCount, 0),
-          room_requirement: section.room_requirement ?? course.room_requirement ?? null,
-          instructor_name: section.instructor_name ?? course.instructor_name ?? 'TBA',
-        }
-      })
-      .filter((section): section is NonNullable<typeof section> => section !== null)
-
-    setSections(hydrated)
-  }
-
-  const persistSections = (nextSections: EnrollmentSection[]) => {
-    setSections(nextSections)
-    window.localStorage.setItem(SECTION_STORAGE_KEY, JSON.stringify(nextSections))
+  const loadSections = async () => {
+    try {
+      const response = await api.get('/courses/sections')
+      setSections(response?.sections ?? [])
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to load sections', error)
+      setSections([])
+    }
   }
 
   const refreshData = async () => {
     setLoading(true)
     try {
-      await loadCatalogCourses()
+      await Promise.all([loadCatalogCourses(), loadSections()])
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to load enrollment data', error)
       setCatalogCourses([])
+      setSections([])
     } finally {
       setLoading(false)
     }
@@ -112,10 +94,6 @@ export function EnrollmentHub() {
   useEffect(() => {
     void refreshData()
   }, [])
-
-  useEffect(() => {
-    loadSections()
-  }, [catalogCourses])
 
   const activeCourses = useMemo(
     () => catalogCourses.filter((course) => normalizeStatus(course.status) === 'active'),
@@ -152,11 +130,13 @@ export function EnrollmentHub() {
   function openCreate() {
     setModalMode('create')
     setForm(defaultSectionForm)
+    setEditingSectionId(null)
     setShowCreate(true)
   }
 
   function openEdit(section: EnrollmentSection) {
     setModalMode('edit')
+    setEditingSectionId(section.section_id)
     setForm({
       course_id: section.course_id,
       section: section.section || 'A',
@@ -174,18 +154,23 @@ export function EnrollmentHub() {
     const confirmed = window.confirm(`Remove ${target.course_code} section ${target.section}? This cannot be undone.`)
     if (!confirmed) return
 
-    const nextSections = sections.filter((item) => item.section_id !== sectionId)
-    persistSections(nextSections)
+    void (async () => {
+      try {
+        await api.delete(`/courses/${target.course_id}/sections/${sectionId}`)
+        await refreshData()
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to delete section', error)
+        alert('Failed to delete section')
+      }
+    })()
   }
 
   function closeModal() {
     setShowCreate(false)
     setModalMode(null)
+    setEditingSectionId(null)
     setForm(defaultSectionForm)
-  }
-
-  function buildSectionId(courseId: string, sectionCode: string) {
-    return `${courseId}:${sectionCode.trim().toUpperCase()}`
   }
 
   async function submitSection(e: React.FormEvent) {
@@ -203,38 +188,23 @@ export function EnrollmentHub() {
         throw new Error('Selected course is not active.')
       }
 
-      const nextSection: EnrollmentSection = {
-        section_id: modalMode === 'edit' && sections.find((section) => section.course_id === form.course_id && section.section === form.section)?.section_id
-          ? sections.find((section) => section.course_id === form.course_id && section.section === form.section)!.section_id
-          : buildSectionId(form.course_id, form.section),
-        course_id: selectedCourse.course_id,
-        course_code: selectedCourse.course_code,
-        course_name: selectedCourse.course_name,
-        semester: selectedCourse.semester,
-        status: selectedCourse.status,
+      const payload = {
         section: form.section.trim().toUpperCase(),
         section_capacity: Number(form.section_capacity),
-        enrolled_count: modalMode === 'edit' ? (sections.find((section) => section.course_id === form.course_id && section.section === form.section)?.enrolled_count ?? 0) : 0,
-        available_slots: Math.max(Number(form.section_capacity) - (modalMode === 'edit' ? (sections.find((section) => section.course_id === form.course_id && section.section === form.section)?.enrolled_count ?? 0) : 0), 0),
-        room_requirement: form.room || selectedCourse.room_requirement || null,
-        room: form.room || null,
-        schedule: form.schedule || null,
-        instructor_name: selectedCourse.instructor_name || 'TBA',
+        room: form.room || undefined,
+        schedule: form.schedule || undefined,
       }
 
-      const existingIndex = sections.findIndex((section) => section.course_id === form.course_id && section.section === nextSection.section)
-      const nextSections = existingIndex >= 0
-        ? sections.map((section, index) => (index === existingIndex ? nextSection : section))
-        : [...sections, nextSection]
+      if (modalMode === 'edit') {
+        if (!editingSectionId) {
+          throw new Error('Missing section identifier.')
+        }
+        await api.patch(`/courses/${form.course_id}/sections/${editingSectionId}`, payload)
+      } else {
+        await api.post(`/courses/${form.course_id}/sections`, payload)
+      }
 
-      persistSections(nextSections)
-
-      await api.patch(`/courses/${form.course_id}/sections`, {
-        section: nextSection.section,
-        section_capacity: nextSection.section_capacity,
-        room: nextSection.room || undefined,
-        schedule: nextSection.schedule || undefined,
-      })
+      await refreshData()
 
       closeModal()
     } catch (error) {
@@ -345,13 +315,15 @@ export function EnrollmentHub() {
                         >
                           Edit Section
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => removeSection(section.section_id)}
-                          className="rounded-full border border-[#f2c1bb] bg-[#fff1f0] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.2em] text-[#b42318] shadow-[0_8px_18px_rgba(15,33,71,0.04)]"
-                        >
-                          Remove
-                        </button>
+                        {canDeleteSections && (
+                          <button
+                            type="button"
+                            onClick={() => removeSection(section.section_id)}
+                            className="rounded-full border border-[#f2c1bb] bg-[#fff1f0] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.2em] text-[#b42318] shadow-[0_8px_18px_rgba(15,33,71,0.04)]"
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

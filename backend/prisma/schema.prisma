@@ -25,6 +25,7 @@ model Course {
   prerequisites    Prerequisite[] @relation("CoursePrerequisites")
   requiredBy       Prerequisite[] @relation("RequiredCourse")
   instructorAssignments InstructorAssignment[]
+  sections         Section[]
   auditLogs        AuditLog[]
 
   @@unique([course_code, semester])
@@ -71,6 +72,18 @@ model Instructor {
   @@map("instructors")
 }
 
+model AuthUser {
+  user_id       String   @id @default(cuid())
+  full_name     String
+  email         String   @unique
+  password_hash String
+  role          String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("auth_users")
+}
+
 model InstructorAssignment {
   assignment_id String     @id @default(cuid())
   course_id     String
@@ -85,6 +98,23 @@ model InstructorAssignment {
 
   @@unique([course_id, section, semester])
   @@map("instructor_assignments")
+}
+
+model Section {
+  section_id       String   @id @default(cuid())
+  course_id        String
+  course           Course   @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  section          String
+  section_capacity Int      @default(0)
+  enrolled_count   Int      @default(0)
+  room             String?
+  schedule         String?
+  semester         String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@unique([course_id, section, semester])
+  @@map("sections")
 }
 
 model AuditLog {

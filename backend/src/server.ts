@@ -38,6 +38,7 @@ app.use(cors({
     callback(null, isAllowedOrigin(origin));
   },
   credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "x-user-role"],
 }));
 app.use(express.json({ limit: "1mb" }));
 

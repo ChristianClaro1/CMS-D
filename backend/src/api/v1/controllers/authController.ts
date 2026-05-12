@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { loginSchema, refreshSchema } from "../validators/authValidator";
-import { loginUser, refreshTokens } from "../../../services/authServices";
+import { loginSchema, refreshSchema, signupSchema } from "../validators/authValidator";
+import { loginUser, refreshTokens, signupUser } from "../../../services/authServices";
 import { successResponse, commonErrors } from "../../../utils/response";
 
 export async function login(req: Request, res: Response, next: NextFunction) {
@@ -11,6 +11,19 @@ export async function login(req: Request, res: Response, next: NextFunction) {
   } catch (error: any) {
     if (error.message === "Invalid credentials") {
       return commonErrors.unauthorized(res, "Invalid email or password.");
+    }
+    next(error);
+  }
+}
+
+export async function signup(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = signupSchema.parse(req.body);
+    const result = await signupUser(data.email, data.password, data.full_name, data.role);
+    return successResponse(res, result, 201);
+  } catch (error: any) {
+    if (error.message === "Email already exists") {
+      return commonErrors.conflict(res, "An account with that email already exists.");
     }
     next(error);
   }
